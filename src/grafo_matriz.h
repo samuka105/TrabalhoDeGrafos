@@ -4,6 +4,8 @@
 #include "grafo.h"
 #include <vector>
 
+using namespace std;
+
 // Implementação de um grafo usando matriz de adjacência.
 class GrafoMatriz : public Grafo {
 private:
@@ -11,7 +13,7 @@ private:
     bool direcionado;                 // Indica se o grafo é direcionado.
     bool peso_vertices;               // Indica se os vértices possuem peso.
     bool peso_arestas;                // Indica se as arestas possuem peso.
-    std::vector<std::vector<int>> matriz; // Matriz de adjacência.
+    vector<std::vector<int>> matriz; // Matriz de adjacência.
 
 public:
     // Construtor padrão.

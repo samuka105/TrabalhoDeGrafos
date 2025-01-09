@@ -228,20 +228,20 @@ bool GrafoMatriz::eh_bipartido() const {
         }
     }
 
-    // Se todos os v rtices puderem ser coloridos com duas cores sem conflitos, o grafo   bipartido.
+    // Se todos os vértices puderem ser coloridos com duas cores sem conflitos, o grafo bipartido.
     return true;
 }
 
 // Carrega o grafo a partir de um arquivo.
 void GrafoMatriz::carrega_grafo(const string& arquivo) {
-    // Abre o arquivo passado como par metro para leitura.
+    // Abre o arquivo passado como parâmetro para leitura.
     ifstream entrada(arquivo);
     if (!entrada) {
-        // Lan a uma exce o caso o arquivo n o possa ser aberto.
+        // Lança uma exceção caso o arquivo não possa ser aberto.
         throw runtime_error("Erro ao abrir o arquivo!");
     }
 
-    // L  o n mero de v rtices, se   direcionado, se os v rtices possuem peso e se as arestas possuem peso.
+    // Le o numero de vertices, se o grafo for direcionado, se os vertices possuem peso e se as arestas possuem peso.
     entrada >> num_vertices >> direcionado >> peso_vertices >> peso_arestas;
 
     // Inicializa a matriz de adjac ncia com zeros.
