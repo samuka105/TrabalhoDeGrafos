@@ -4,6 +4,7 @@
 #include "grafo.h"
 #include <vector>
 #include <list>
+using namespace std;
 
 // Implementação de um grafo usando lista de adjacência.
 class GrafoLista : public Grafo {
@@ -30,8 +31,9 @@ public:
     bool eh_arvore() const override;
     bool possui_articulacao() const override;
     bool possui_ponte() const override;
-    void carrega_grafo(const std::string& arquivo) override;
-    void novo_grafo(const std::string& config_arquivo) override;
+    void carrega_grafo(const string& arquivo) override;
+    void novo_grafo(const string& config_arquivo) override;
+
 };
 
 #endif // GRAFO_LISTA_H
