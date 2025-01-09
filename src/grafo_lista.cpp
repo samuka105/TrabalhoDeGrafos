@@ -219,8 +219,8 @@ void GrafoLista::carrega_grafo(const string& arquivo) {
     }
     // L  o n mero de v rtices, se   direcionado, se os v rtices possuem peso e se as arestas possuem peso.
     entrada >> num_vertices >> direcionado >> peso_vertices >> peso_arestas;
-    // Inicializa a lista de adjac ncia com um vetor de tamanho vertices,
-    // cada posi o do vetor   uma lista vazia.
+    // Inicializa a lista de adjacência com um vetor de tamanho vertices,
+    // cada posição do vetor   uma lista vazia.
     lista_adj.clear();
     lista_adj.resize(num_vertices);
     int origem, destino, peso;
