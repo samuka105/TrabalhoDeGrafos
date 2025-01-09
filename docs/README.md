@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Projeto de Grafos em C++
 
 ## Descrição
