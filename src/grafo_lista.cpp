@@ -97,7 +97,7 @@ bool GrafoLista::possui_articulacao() const {
     int time = 0;
     bool possui_articulacao = false;
 
-    // Função auxiliar para DFS
+    // Função auxiliar para Busca em profundidade
     function<void(int)> buscaProfundidade = [&](int u) {
         visitado[u] = true;
         discovery_time[u] = low_time[u] = ++time;
@@ -122,7 +122,7 @@ bool GrafoLista::possui_articulacao() const {
         }
     };
 
-    // Chama DFS para todos os vértices não visitados
+    // Chama Busca em profundidade para todos os vértices não visitados
     for (int i = 0; i < num_vertices; i++) {
         if (!visitado[i]) {
             buscaProfundidade(i);
@@ -163,7 +163,7 @@ bool GrafoLista::possui_ponte() const {
         }
     };
 
-    // Chama DFS para todos os vértices não visitados
+    // Chama Busca em Profundidade para todos os vértices não visitados
     for (int i = 0; i < num_vertices; i++) {
         if (!visitado[i]) {
             buscaProfundidade(i, visitado);  // Passando o vetor visitado
