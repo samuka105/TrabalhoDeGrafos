@@ -1,67 +1,47 @@
 #include <iostream>
 #include <string>
-#include "grafo_lista.h"
 #include "grafo_matriz.h"
+#include "grafo_lista.h"
 #include "util.h"
 
-using namespace std;
-using namespace Util; // Usa as funções do namespace Util diretamente.
-
 void testar_grafo(Grafo& grafo) {
-    cout << "Ordem do grafo: " << grafo.get_ordem() << endl;
-    cout << "É direcionado: " << (grafo.eh_direcionado() ? "Sim" : "Não") << endl;
-    cout << "É bipartido: " << (grafo.eh_bipartido() ? "Sim" : "Não") << endl;
-    cout << "Número de componentes conexas: " << grafo.n_conexo() << endl;
-    cout << "É completo: " << (grafo.eh_completo() ? "Sim" : "Não") << endl;
-    cout << "É uma árvore: " << (grafo.eh_arvore() ? "Sim" : "Não") << endl;
-    cout << "Possui vértices de articulação: " << (grafo.possui_articulacao() ? "Sim" : "Não") << endl;
-    cout << "Possui arestas ponte: " << (grafo.possui_ponte() ? "Sim" : "Não") << endl;
+    std::cout << "Ordem do grafo: " << grafo.get_ordem() << std::endl;
+    std::cout << "É direcionado: " << (grafo.eh_direcionado() ? "Sim" : "Não") << std::endl;
+    std::cout << "É bipartido: " << (grafo.eh_bipartido() ? "Sim" : "Não") << std::endl;
+    std::cout << "Número de componentes conexas: " << grafo.n_conexo() << std::endl;
+    std::cout << "É completo: " << (grafo.eh_completo() ? "Sim" : "Não") << std::endl;
+    std::cout << "É uma árvore: " << (grafo.eh_arvore() ? "Sim" : "Não") << std::endl;
+    std::cout << "Possui vértices de articulação: " << (grafo.possui_articulacao() ? "Sim" : "Não") << std::endl;
+    std::cout << "Possui arestas ponte: " << (grafo.possui_ponte() ? "Sim" : "Não") << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        cerr << "Uso: " << argv[0] << " [-d|-c] <arquivo_config> <arquivo_grafo>" << endl;
+    if (argc < 4) {
+        std::cerr << "Uso: " << argv[0] << " -d [-m|-l] <arquivo_grafo>" << std::endl;
         return 1;
     }
 
-    string modo = argv[1];
-    string arquivo_config = argv[2];
-    string arquivo_grafo = argc > 3 ? argv[3] : "";
+    std::string modo = argv[1];
+    std::string estrutura = argv[2];
+    std::string arquivo_grafo = argv[3];
+
+    if (modo != "-d" || (estrutura != "-m" && estrutura != "-l")) {
+        std::cerr << "Argumentos inválidos!" << std::endl;
+        return 1;
+    }
 
     try {
-        if (modo == "-d") {
-            cout << "=== Testando GrafoLista ===" << endl;
-            GrafoLista grafoLista(0, false, false, false);
-            
-            // Usa a função Util::ler_arquivo para carregar o grafo.
-            vector<string> linhas = ler_arquivo(arquivo_grafo);
-            for (const string& linha : linhas) {
-                cout << "Linha lida: " << linha << endl; // Apenas para validação
-            }
-            grafoLista.carrega_grafo(arquivo_grafo);
-            testar_grafo(grafoLista);
-
-            cout << "\n=== Testando GrafoMatriz ===" << endl;
-            GrafoMatriz grafoMatriz(0, false, false, false);
-            grafoMatriz.carrega_grafo(arquivo_grafo);
-            testar_grafo(grafoMatriz);
-
-        } else if (modo == "-c") {
-            cout << "=== Criando grafo aleatório ===" << endl;
-            // Gera um grafo aleatório e salva em um arquivo usando Util::gerar_grafo_aleatorio.
-            gerar_grafo_aleatorio(5, 10, arquivo_config); // Gera um grafo com 5 vértices e 10 arestas.
-            cout << "Grafo aleatório gerado e salvo em: " << arquivo_config << endl;
-
-            // Carrega o grafo gerado para testar as funcionalidades.
-            GrafoLista grafoLista(0, false, false, false);
-            grafoLista.carrega_grafo(arquivo_config);
-            testar_grafo(grafoLista);
-        } else {
-            cerr << "Modo inválido! Use -d para carregar grafo ou -c para criar grafo aleatório." << endl;
-            return 1;
+        if (estrutura == "-m") {
+            GrafoMatriz grafo(0, false, false, false);
+            grafo.carrega_grafo(arquivo_grafo);
+            testar_grafo(grafo);
+        } else if (estrutura == "-l") {
+            GrafoLista grafo(0, false, false, false);
+            grafo.carrega_grafo(arquivo_grafo);
+            testar_grafo(grafo);
         }
-    } catch (const exception& e) {
-        cerr << "Erro: " << e.what() << endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Erro: " << e.what() << std::endl;
         return 1;
     }
 
