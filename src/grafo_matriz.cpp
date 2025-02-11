@@ -39,7 +39,6 @@ int GrafoMatriz::n_conexo() const {
     }
     return componentes;
 }
-
 void GrafoMatriz::buscaProfundidade(int v, std::vector<bool>& visitado) const {
     visitado[v] = true;
     for (int j = 0; j < num_vertices; ++j) {
