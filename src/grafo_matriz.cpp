@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <queue>
-#include <vector>
 #include <stdexcept>
 #include <functional>
 
@@ -11,20 +10,15 @@ GrafoMatriz::GrafoMatriz(int vertices, bool eh_direcionado, bool ponderado_verti
     matriz.resize(vertices, std::vector<int>(vertices, 0));
 }
 
-int GrafoMatriz::get_ordem() const {
-    return num_vertices;
-}
+GrafoMatriz::~GrafoMatriz() {}
 
-bool GrafoMatriz::eh_direcionado() const {
-    return direcionado;
-}
-
-bool GrafoMatriz::vertice_ponderado() const {
-    return peso_vertices;
-}
-
-bool GrafoMatriz::aresta_ponderada() const {
-    return peso_arestas;
+void GrafoMatriz::buscaProfundidade(int v, std::vector<bool>& visitado) const {
+    visitado[v] = true;
+    for (int j = 0; j < num_vertices; ++j) {
+        if (matriz[v][j] > 0 && !visitado[j]) {
+            buscaProfundidade(j, visitado);
+        }
+    }
 }
 
 int GrafoMatriz::n_conexo() const {
@@ -38,14 +32,6 @@ int GrafoMatriz::n_conexo() const {
         }
     }
     return componentes;
-}
-void GrafoMatriz::buscaProfundidade(int v, std::vector<bool>& visitado) const {
-    visitado[v] = true;
-    for (int j = 0; j < num_vertices; ++j) {
-        if (matriz[v][j] > 0 && !visitado[j]) {
-            buscaProfundidade(j, visitado);
-        }
-    }
 }
 
 int GrafoMatriz::get_grau(int vertice) const {

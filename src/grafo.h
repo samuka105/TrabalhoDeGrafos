@@ -1,11 +1,17 @@
+#ifndef GRAFO_H
+#define GRAFO_H
+
+#include <vector>
+#include <string>
+
 class Grafo {
-protected:  // Alterado de private para protected
+protected:
     int num_vertices;
     bool direcionado;
     bool peso_vertices;
     bool peso_arestas;
 
-    // Função protegida e puramente virtual
+    // Função puramente virtual para busca em profundidade
     virtual void buscaProfundidade(int v, std::vector<bool>& visitado) const = 0;
 
 public:
@@ -24,3 +30,5 @@ public:
     virtual bool possui_ponte() const = 0;
     virtual void carrega_grafo(const std::string& arquivo) = 0;
 };
+
+#endif // GRAFO_H

@@ -1,30 +1,20 @@
 #include "grafo.h"
 
+Grafo::Grafo(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas)
+    : num_vertices(vertices), direcionado(eh_direcionado), peso_vertices(ponderado_vertices), peso_arestas(ponderado_arestas) {}
 
-// Retorna a ordem do grafo (quantidade de vértices).
 int Grafo::get_ordem() const {
-    return num_vertices; // Retorna o número de vértices.
+    return num_vertices;
 }
 
-// Verifica se o grafo é direcionado.
 bool Grafo::eh_direcionado() const {
-    return direcionado; // Retorna o valor armazenado na variável.
+    return direcionado;
 }
 
-// Verifica se os vértices possuem peso.
 bool Grafo::vertice_ponderado() const {
-    return peso_vertices; // Retorna o valor armazenado na variável.
+    return peso_vertices;
 }
 
-// Verifica se as arestas possuem peso.
 bool Grafo::aresta_ponderada() const {
-    return peso_arestas; // Retorna o valor armazenado na variável.
-}
-
-void Grafo::buscaProfundidade(int v, vector<bool>& visitado) const {
-    if (visitado[v]) return; // Evita loop infinito.
-    visitado[v] = true;
-    for (const auto& vizinho : this->lista_adj[v]) {
-        buscaProfundidade(vizinho, visitado);
-    }
+    return peso_arestas;
 }

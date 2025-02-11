@@ -10,20 +10,15 @@ GrafoLista::GrafoLista(int vertices, bool eh_direcionado, bool ponderado_vertice
     lista_adj.resize(vertices);
 }
 
-int GrafoLista::get_ordem() const {
-    return num_vertices;
-}
+GrafoLista::~GrafoLista() {}
 
-bool GrafoLista::eh_direcionado() const {
-    return direcionado;
-}
-
-bool GrafoLista::vertice_ponderado() const {
-    return peso_vertices;
-}
-
-bool GrafoLista::aresta_ponderada() const {
-    return peso_arestas;
+void GrafoLista::buscaProfundidade(int v, std::vector<bool>& visitado) const {
+    visitado[v] = true;
+    for (const auto& vizinho : lista_adj[v]) {
+        if (!visitado[vizinho]) {
+            buscaProfundidade(vizinho, visitado);
+        }
+    }
 }
 
 int GrafoLista::n_conexo() const {
@@ -37,15 +32,6 @@ int GrafoLista::n_conexo() const {
         }
     }
     return componentes;
-}
-
-void GrafoLista::buscaProfundidade(int v, std::vector<bool>& visitado) const {
-    visitado[v] = true;
-    for (const auto& vizinho : lista_adj[v]) {
-        if (!visitado[vizinho]) {
-            buscaProfundidade(vizinho, visitado);
-        }
-    }
 }
 
 int GrafoLista::get_grau(int vertice) const {
