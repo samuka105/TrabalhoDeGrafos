@@ -2,12 +2,11 @@
 #define GRAFO_LISTA_H
 
 #include "grafo.h"
-#include <vector>
 #include <list>
 
 class GrafoLista : public Grafo {
 private:
-    std::vector<std::list<int>> lista_adj; // Lista de adjacência.
+    std::vector<std::list<std::pair<int, int>>> lista_adj; // Lista de adjacência.
 
 public:
     GrafoLista(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas);
@@ -22,6 +21,13 @@ public:
     bool possui_ponte() const override;
     bool eh_bipartido() const override;
     void carrega_grafo(const std::string& arquivo) override;
+
+    // Novos métodos da Parte 2
+    void novo_no() override;
+    void nova_aresta(int origem, int destino, int peso) override;
+    void deleta_no(int id) override;
+    void deleta_aresta(int origem, int destino) override;
+    double menor_distancia(int origem, int destino) const override;
 };
 
 #endif // GRAFO_LISTA_H

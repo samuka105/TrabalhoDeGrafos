@@ -35,10 +35,20 @@ int main(int argc, char* argv[]) {
             GrafoMatriz grafo(0, false, false, false);
             grafo.carrega_grafo(arquivo_grafo);
             testar_grafo(grafo);
+
+            // Testando novos métodos da Parte 2
+            grafo.novo_no();
+            grafo.nova_aresta(1, 2, 5);
+            std::cout << "Menor distância entre 1 e 2: " << grafo.menor_distancia(1, 2) << std::endl;
         } else if (estrutura == "-l") {
             GrafoLista grafo(0, false, false, false);
             grafo.carrega_grafo(arquivo_grafo);
             testar_grafo(grafo);
+
+            // Testando novos métodos da Parte 2
+            grafo.novo_no();
+            grafo.nova_aresta(1, 2, 5);
+            std::cout << "Menor distância entre 1 e 2: " << grafo.menor_distancia(1, 2) << std::endl;
         }
     } catch (const std::exception& e) {
         std::cerr << "Erro: " << e.what() << std::endl;

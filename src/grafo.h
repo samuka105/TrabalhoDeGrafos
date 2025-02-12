@@ -29,6 +29,13 @@ public:
     virtual bool possui_articulacao() const = 0;
     virtual bool possui_ponte() const = 0;
     virtual void carrega_grafo(const std::string& arquivo) = 0;
+
+    // Novos métodos da Parte 2
+    virtual void novo_no() = 0;
+    virtual void nova_aresta(int origem, int destino, int peso) = 0;
+    virtual void deleta_no(int id) = 0;
+    virtual void deleta_aresta(int origem, int destino) = 0;
+    virtual double menor_distancia(int origem, int destino) const = 0;
 };
 
 #endif // GRAFO_H
