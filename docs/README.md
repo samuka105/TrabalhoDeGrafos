@@ -125,7 +125,7 @@ std::cout << "Menor distância entre 1 e 2: " << distancia << std::endl;
 ---
 
 ## Status Atual
-O projeto está em desenvolvimento ativo. Algumas funcionalidades podem ainda apresentar problemas, e estou trabalhando para corrigi-los e melhorar a estabilidade da aplicação.
+Melhorias com relação a primeira entrega.
 
 
 ---
