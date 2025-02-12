@@ -27,25 +27,6 @@ A **Parte 2** do trabalho expande as funcionalidades da **Parte 1**, incluindo m
 
 ---
 
-## Estrutura do Projeto
-
-```
-TrabalhoGrafosGrupoX/
-├── include/
-│   ├── grafo.h
-│   ├── grafo_matriz.h
-│   ├── grafo_lista.h
-│   └── util.h
-├── src/
-│   ├── grafo.cpp
-│   ├── grafo_matriz.cpp
-│   ├── grafo_lista.cpp
-│   ├── util.cpp
-│   └── main.cpp
-├── entradas/
-│   └── grafo.txt
-└── README.md
-```
 
 ### Descrição dos Arquivos
 - **`grafo.h`**: Define a classe abstrata `Grafo`, que contém métodos comuns a todos os tipos de grafos.
@@ -144,7 +125,7 @@ std::cout << "Menor distância entre 1 e 2: " << distancia << std::endl;
 ---
 
 ## Status Atual
-O projeto está em desenvolvimento ativo. Algumas funcionalidades podem ainda apresentar problemas, e estou trabalhando para corrigi-los e melhorar a estabilidade da aplicação.
+Melhorias com relação a primeira entrega.
 
 
 ---
