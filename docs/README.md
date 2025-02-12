@@ -1,6 +1,4 @@
-Aqui está o conteúdo reformatado para um arquivo `README.md`:
 
-```markdown
 # Projeto de Grafos em C++
 
 ## Descrição
