@@ -11,7 +11,6 @@ namespace Util {
         if (!entrada) {
             throw std::runtime_error("Erro ao abrir o arquivo!");
         }
-
         std::vector<std::string> linhas;
         std::string linha;
         while (std::getline(entrada, linha)) {
@@ -23,19 +22,16 @@ namespace Util {
     bool verificar_biparticao(const std::vector<std::vector<int>>& grafo) {
         int n = grafo.size();
         std::vector<int> cor(n, -1);
-
         for (int i = 0; i < n; ++i) {
             if (cor[i] == -1) {
                 std::queue<int> fila;
                 fila.push(i);
                 cor[i] = 0;
-
                 while (!fila.empty()) {
                     int atual = fila.front();
                     fila.pop();
-
                     for (int vizinho = 0; vizinho < n; ++vizinho) {
-                        if (grafo[atual][vizinho] > 0) {
+                        if (grafo[atual][vizinho] != 0) {
                             if (cor[vizinho] == -1) {
                                 cor[vizinho] = 1 - cor[atual];
                                 fila.push(vizinho);
@@ -55,10 +51,8 @@ namespace Util {
         if (!saida) {
             throw std::runtime_error("Erro ao criar o arquivo de saída!");
         }
-
         std::srand(std::time(0));
         saida << vertices << " " << arestas << std::endl;
-
         for (int i = 0; i < arestas; ++i) {
             int origem = std::rand() % vertices + 1;
             int destino = std::rand() % vertices + 1;
