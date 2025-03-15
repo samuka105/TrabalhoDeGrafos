@@ -57,6 +57,8 @@ public:
 
     /// Calcula a menor distância entre dois vértices
     double menor_distancia(int origem, int destino) const override;
+
+    
 };
 
 #endif // GRAFO_MATRIZ_H

@@ -4,6 +4,7 @@
 #include "grafo_lista.h"
 #include "util.h"
 
+
 void testar_grafo(Grafo& grafo) {
     std::cout << "Ordem do grafo: " << grafo.get_ordem() << std::endl;
     std::cout << "É direcionado: " << (grafo.eh_direcionado() ? "Sim" : "Não") << std::endl;
@@ -15,9 +16,17 @@ void testar_grafo(Grafo& grafo) {
     std::cout << "Possui arestas ponte: " << (grafo.possui_ponte() ? "Sim" : "Não") << std::endl;
 }
 
+/void executar_algoritmos_np(Grafo& grafo) {
+    // Exemplo para TSP (implemente seus métodos)
+    auto sol_gulosa = grafo.solucao_gulosa();
+    auto sol_rand = grafo.solucao_randomizada(0.5);
+    auto sol_reativa = grafo.solucao_reativa(1000);
+    // ... processar soluções ...
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 4) {
-        std::cerr << "Uso: " << argv[0] << " -d [-m|-l] <arquivo_grafo>" << std::endl;
+        std::cerr << "Uso: " << argv[0] << " [-d|-p] [-m|-l] <arquivo_grafo>" << std::endl;
         return 1;
     }
 
@@ -25,30 +34,20 @@ int main(int argc, char* argv[]) {
     std::string estrutura = argv[2];
     std::string arquivo_grafo = argv[3];
 
-    if (modo != "-d" || (estrutura != "-m" && estrutura != "-l")) {
-        std::cerr << "Argumentos inválidos!" << std::endl;
-        return 1;
-    }
-
     try {
         if (estrutura == "-m") {
             GrafoMatriz grafo(0, false, false, false);
             grafo.carrega_grafo(arquivo_grafo);
-            testar_grafo(grafo);
-
-            // Testando novos métodos da Parte 2
-            grafo.novo_no();
-            grafo.nova_aresta(1, 2, 5);
-            std::cout << "Menor distância entre 1 e 2: " << grafo.menor_distancia(1, 2) << std::endl;
+            if (modo == "-d") testar_grafo(grafo);
+            else if (modo == "-p") executar_algoritmos_np(grafo);
         } else if (estrutura == "-l") {
             GrafoLista grafo(0, false, false, false);
             grafo.carrega_grafo(arquivo_grafo);
-            testar_grafo(grafo);
-
-            // Testando novos métodos da Parte 2
-            grafo.novo_no();
-            grafo.nova_aresta(1, 2, 5);
-            std::cout << "Menor distância entre 1 e 2: " << grafo.menor_distancia(1, 2) << std::endl;
+            if (modo == "-d") testar_grafo(grafo);
+            else if (modo == "-p") executar_algoritmos_np(grafo);
+        } else {
+            std::cerr << "Estrutura inválida! Use -m ou -l." << std::endl;
+            return 1;
         }
     } catch (const std::exception& e) {
         std::cerr << "Erro: " << e.what() << std::endl;

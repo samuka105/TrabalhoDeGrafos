@@ -68,6 +68,7 @@ public:
 
     /// Calcula a menor distância entre dois vértices
     virtual double menor_distancia(int origem, int destino) const = 0;
+    
 };
 
 #endif // GRAFO_H
