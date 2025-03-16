@@ -46,13 +46,15 @@ namespace Util {
         return true;
     }
 
+// util.cpp
     void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
         std::ofstream saida(arquivo_saida);
         if (!saida) {
             throw std::runtime_error("Erro ao criar o arquivo de saída!");
         }
         std::srand(std::time(0));
-        saida << vertices << " " << arestas << std::endl;
+        // Adicione as flags: 0 (não direcionado), 0 (vértices não ponderados), 1 (arestas ponderadas)
+        saida << vertices << " 0 0 1" << std::endl; // Formato correto
         for (int i = 0; i < arestas; ++i) {
             int origem = std::rand() % vertices + 1;
             int destino = std::rand() % vertices + 1;

@@ -4,6 +4,11 @@
 #include "grafo_matriz.h"
 #include "grafo_lista.h"
 #include "util.h"
+// Inclua este cabeçalho para Windows
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 
 // Função para imprimir as propriedades do grafo
 void testar_grafo(Grafo& grafo) {
@@ -18,6 +23,7 @@ void testar_grafo(Grafo& grafo) {
 }
 
 // Função para calcular a "Maior menor distância" entre quaisquer dois nós
+// main.cpp
 void imprimir_maior_menor_distancia(Grafo& grafo) {
     double max_distance = 0;
     int id_u = -1, id_v = -1;
@@ -31,12 +37,20 @@ void imprimir_maior_menor_distancia(Grafo& grafo) {
             }
         }
     }
-    // Converte para 1-based para exibição
-    std::cout << "Maior menor distância: (" << id_u + 1 << "-" << id_v + 1 << ") " << max_distance << std::endl;
+    // Verifica se há caminhos válidos
+    if (id_u == -1 || id_v == -1) {
+        std::cout << "Maior menor distância: Nenhum caminho encontrado." << std::endl;
+    } else {
+        std::cout << "Maior menor distância: (" << id_u + 1 << "-" << id_v + 1 << ") " << max_distance << std::endl;
+    }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])  {
     // Opção de gerar grafo aleatório
+        // Configura a codificação para UTF-8 (Windows)
+        #ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);
+        #endif
     if (argc > 1 && std::string(argv[1]) == "-g") {
         if (argc < 5) {
             std::cerr << "Uso: " << argv[0] << " -g <num_vertices> <num_arestas> <arquivo_saida>" << std::endl;
