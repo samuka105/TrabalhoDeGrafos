@@ -14,8 +14,8 @@ private:
     int capacidade;
 
     void redimensionarMatriz(int nova_capacidade);
-
 public:
+    GrafoMatriz(); // Construtor padrão
     GrafoMatriz(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas);
     ~GrafoMatriz() override;
 
@@ -33,6 +33,12 @@ public:
     void deleta_no(int id) override;
     void deleta_aresta(int origem, int destino) override;
     double menor_distancia(int origem, int destino) const override;
+
+    // Métodos TSP
+    std::vector<int> tsp_guloso_densidade();
+    std::vector<int> tsp_reativo(int max_iteracoes);
+    double calcular_custo(const std::vector<int>& caminho);
+
 
     // Método auxiliar para contar arestas
     int get_num_arestas() const;

@@ -6,6 +6,14 @@
 #include <functional>
 #include <fstream>
 
+// grafo_matriz.cpp
+
+// Construtor padrão (sem parâmetros)
+GrafoMatriz::GrafoMatriz() 
+    : Grafo(0, false, false, false), capacidade(10) { // Inicializa com 0 vértices
+    matriz.resize(capacidade, std::vector<int>(capacidade, 0)); // Cria matriz 10x10
+}
+
 // Construtor: inicializa com capacidade 10
 GrafoMatriz::GrafoMatriz(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas)
     : Grafo(vertices, eh_direcionado, ponderado_vertices, ponderado_arestas), capacidade(10) {
@@ -288,3 +296,77 @@ double GrafoMatriz::menor_distancia(int origem, int destino) const {
     }
     return dist[destino];
 }
+
+// --- Algoritmo Guloso ---
+std::vector<int> GrafoMatriz::tsp_guloso_densidade() {
+    std::vector<int> caminho;
+    std::vector<bool> visitado(num_vertices, false);
+    int atual = 0;
+    visitado[atual] = true;
+    caminho.push_back(atual);
+
+    for (int i = 1; i < num_vertices; i++) {
+        double menor_densidade = std::numeric_limits<double>::max();
+        int proxima = -1;
+
+        for (int j = 0; j < num_vertices; j++) {
+            if (!visitado[j] && matriz[atual][j] != 0) {
+                int conexoes_nao_visitadas = 0;
+                for (int k = 0; k < num_vertices; k++) {
+                    if (!visitado[k] && matriz[j][k] != 0) conexoes_nao_visitadas++;
+                }
+                double densidade = matriz[atual][j] / (conexoes_nao_visitadas + 1);
+                if (densidade < menor_densidade) {
+                    menor_densidade = densidade;
+                    proxima = j;
+                }
+            }
+        }
+
+        if (proxima == -1) break;
+        visitado[proxima] = true;
+        caminho.push_back(proxima);
+        atual = proxima;
+    }
+
+    return caminho;
+}
+
+// --- Algoritmo Reativo ---
+std::vector<int> GrafoMatriz::tsp_reativo(int max_iteracoes) {
+    int N = 3;
+    double taxa_limite_inferior = 0.05;
+    double taxa_limite_superior = 0.20;
+    std::vector<double> custos_historicos;
+
+    std::vector<int> melhor_caminho;
+    double menor_custo = std::numeric_limits<double>::max();
+
+    for (int it = 0; it < max_iteracoes; it++) {
+        auto caminho = tsp_guloso_densidade(); // Adapte conforme necessário
+        double custo = calcular_custo(caminho);
+
+        custos_historicos.push_back(custo);
+        if (custo < menor_custo) {
+            menor_custo = custo;
+            melhor_caminho = caminho;
+        }
+
+        if (it % 10 == 0 && it >= 10) {
+            double taxa = (custos_historicos[it - 10] - custos_historicos[it]) / custos_historicos[it - 10];
+            if (taxa < taxa_limite_inferior) N = std::min(5, N + 1);
+            else if (taxa > taxa_limite_superior) N = std::max(2, N - 1);
+        }
+    }
+
+    return melhor_caminho;
+}
+
+double GrafoMatriz::calcular_custo(const std::vector<int>& caminho) {
+    double custo = 0;
+    for (size_t i = 0; i < caminho.size() - 1; i++) {
+        custo += matriz[caminho[i]][caminho[i+1]]; // Erro aqui! Remova o colchete extra.
+    }
+    custo += matriz[caminho.back()][caminho.front()]; 
+    return custo;
+} // 

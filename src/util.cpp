@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <ctime>
+#include <set>
+#include <utility> // Para usar std::pair
 
 namespace Util {
     std::vector<std::string> ler_arquivo(const std::string& arquivo) {
@@ -49,20 +51,27 @@ namespace Util {
 // util.cpp
     void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
         std::ofstream saida(arquivo_saida);
-        if (!saida) {
-            throw std::runtime_error("Erro ao criar o arquivo de saída!");
-        }
+        if (!saida) throw std::runtime_error("Erro ao criar o arquivo de saída!");
+    
         std::srand(std::time(0));
-        // Adicione as flags: 0 (não direcionado), 0 (vértices não ponderados), 1 (arestas ponderadas)
-        saida << vertices << " 0 0 1" << std::endl; // Formato correto
+        saida << vertices << " 0 0 1" << std::endl; // Grafo não direcionado, arestas ponderadas
+    
+        std::set<std::pair<int, int>> arestas_geradas; // Armazena arestas únicas
+    
         for (int i = 0; i < arestas; ++i) {
-            int origem = std::rand() % vertices + 1;
-            int destino = std::rand() % vertices + 1;
-            while (destino == origem) {
+            int origem, destino;
+            do {
+                origem = std::rand() % vertices + 1;
                 destino = std::rand() % vertices + 1;
-            }
+                
+                // Garante origem <= destino para evitar duplicatas em grafos não direcionados
+                if (origem > destino) std::swap(origem, destino);
+                
+            } while (origem == destino || arestas_geradas.count({origem, destino})); // Evita laços e arestas repetidas
+    
             int peso = std::rand() % 10 + 1;
             saida << origem << " " << destino << " " << peso << std::endl;
+            arestas_geradas.insert({origem, destino}); // Registra a aresta
         }
     }
 }

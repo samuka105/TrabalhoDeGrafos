@@ -13,6 +13,7 @@ private:
     std::vector<std::list<std::pair<int, int>>> lista_adj;
 
 public:
+    GrafoLista(); // Construtor padrão
     GrafoLista(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas);
     ~GrafoLista() override;
 
@@ -30,6 +31,10 @@ public:
     void deleta_no(int id) override;
     void deleta_aresta(int origem, int destino) override;
     double menor_distancia(int origem, int destino) const override;
+ 
+    // Métodos TSP
+    std::vector<int> tsp_randomizado_controlado(int iteracoes, int N = 3);
+    double calcular_custo(const std::vector<int>& caminho);
 
     // Método específico para lista
     int get_grau(int vertice) const;

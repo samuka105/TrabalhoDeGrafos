@@ -11,6 +11,13 @@ bool Grafo::eh_direcionado() const {
     return this->direcionado;
 }
 
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * @brief Verifica se o grafo tem pesos associados aos vértices.
+ * @return true se os vértices são ponderados, false caso contrário.
+ */
+
+/******  337ef46c-6914-4e80-95a9-653a18500445  *******/
 bool Grafo::vertice_ponderado() const {
     return this->peso_vertices;
 }

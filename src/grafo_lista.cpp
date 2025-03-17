@@ -6,6 +6,12 @@
 #include <functional>
 #include <fstream>
 
+
+// Construtor padrão
+GrafoLista::GrafoLista() : Grafo(0, false, false, false) {
+    lista_adj.resize(0); // Lista vazia
+}
+
 // Construtor
 GrafoLista::GrafoLista(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas)
     : Grafo(vertices, eh_direcionado, ponderado_vertices, ponderado_arestas) {
@@ -277,4 +283,78 @@ double GrafoLista::menor_distancia(int origem, int destino) const {
         }
     }
     return dist[destino];
+}
+
+// --- Algoritmo Randomizado ---
+std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
+    std::vector<int> melhor_caminho;
+    double menor_custo = std::numeric_limits<double>::max();
+
+    for (int it = 0; it < iteracoes; it++) {
+        std::vector<int> caminho;
+        std::vector<bool> visitado(num_vertices, false);
+        int atual = rand() % num_vertices;
+        visitado[atual] = true;
+        caminho.push_back(atual);
+
+        for (int i = 1; i < num_vertices; i++) {
+            std::vector<std::pair<double, int>> opcoes;
+            for (const auto& aresta : lista_adj[atual]) {
+                int destino = aresta.first;
+                if (!visitado[destino]) {
+                    opcoes.push_back({aresta.second, destino});
+                }
+            }
+            if (opcoes.empty()) break;
+
+            std::sort(opcoes.begin(), opcoes.end());
+            int n = std::min(N, (int)opcoes.size());
+            std::vector<double> probabilidades(n);
+            double soma = 0;
+            for (int j = 0; j < n; j++) {
+                probabilidades[j] = 1.0 / opcoes[j].first;
+                soma += probabilidades[j];
+            }
+
+            double rand_val = (double)rand() / RAND_MAX * soma;
+            double acumulado = 0;
+            int escolha = 0;
+            for (; escolha < n; escolha++) {
+                acumulado += probabilidades[escolha];
+                if (acumulado >= rand_val) break;
+            }
+
+            int proxima = opcoes[escolha].second;
+            visitado[proxima] = true;
+            caminho.push_back(proxima);
+            atual = proxima;
+        }
+
+        double custo = calcular_custo(caminho);
+        if (custo < menor_custo) {
+            menor_custo = custo;
+            melhor_caminho = caminho;
+        }
+    }
+
+    return melhor_caminho;
+}
+
+double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
+    double custo = 0;
+    for (size_t i = 0; i < caminho.size() - 1; i++) {
+        for (const auto& aresta : lista_adj[caminho[i]]) {
+            if (aresta.first == caminho[i+1]) {
+                custo += aresta.second;
+                break;
+            }
+        }
+    }
+    for (const auto& aresta : lista_adj[caminho.back()]) {
+        if (aresta.first == caminho.front()) {
+            custo += aresta.second;
+            break;
+        }
+    }
+    return custo;
 }
