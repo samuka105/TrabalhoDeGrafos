@@ -5,6 +5,7 @@
 #include <limits>
 #include <functional>
 #include <fstream>
+#include <numeric>
 
 
 // Construtor padrão
@@ -334,6 +335,54 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
         if (custo < menor_custo) {
             menor_custo = custo;
             melhor_caminho = caminho;
+        }
+    }
+
+    return melhor_caminho;
+}
+
+std::vector<int> GrafoLista::tsp_reativo(int max_iteracoes) {
+    int N = 3;
+    const double taxa_limite_inferior = 0.05;
+    const double taxa_limite_superior = 0.20;
+    std::vector<double> custos_historicos;
+    std::vector<int> melhor_caminho;
+    double menor_custo = std::numeric_limits<double>::max();
+
+    for (int it = 0; it < max_iteracoes; ++it) {
+        // Passo 1: Executa o randomizado com N atual (1 iteração por ciclo)
+        std::vector<int> caminho = this->tsp_randomizado_controlado(1, N);
+        
+        // Passo 2: Calcula custo e atualiza histórico
+        double custo = this->calcular_custo(caminho);
+        custos_historicos.push_back(custo);
+        
+        if (custo < menor_custo) {
+            menor_custo = custo;
+            melhor_caminho = caminho;
+        }
+
+        // Passo 3: Ajuste dinâmico de N (a cada 10 iterações)
+        if (it % 10 == 0 && it >= 10) {
+            // Calcula média do período anterior (5 iterações entre -10 e -5)
+            double custo_medio_anterior = std::accumulate(
+                custos_historicos.begin() + (it - 10),
+                custos_historicos.begin() + (it - 5), 0.0) / 5;
+
+            // Calcula média do período atual (5 últimas iterações)
+            double custo_medio_atual = std::accumulate(
+                custos_historicos.begin() + (it - 5),
+                custos_historicos.begin() + it, 0.0) / 5;
+
+            // Calcula taxa de melhoria relativa
+            double taxa = (custo_medio_anterior - custo_medio_atual) / custo_medio_anterior;
+
+            // Ajusta N conforme a taxa
+            if (taxa < taxa_limite_inferior) {
+                N = std::min(5, N + 1);  // Aumenta diversificação
+            } else if (taxa > taxa_limite_superior) {
+                N = std::max(2, N - 1);  // Aumenta intensificação
+            }
         }
     }
 

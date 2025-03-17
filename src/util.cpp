@@ -92,7 +92,7 @@ namespace Util {
      * @param arquivo_TSPLIB Caminho para o arquivo TSPLIB.
      * @param arquivo_saida Caminho para o arquivo convertido.
      */
-    void converter_TSPLIB_para_formato_esperado(const std::string& arquivo_TSPLIB, const std::string& arquivo_saida) {
+    void Util::converter_TSPLIB_para_formato_esperado(const std::string& arquivo_TSPLIB, const std::string& arquivo_saida) {
         std::ifstream entrada(arquivo_TSPLIB);
         if (!entrada) {
             throw std::runtime_error("Erro ao abrir o arquivo TSPLIB!");

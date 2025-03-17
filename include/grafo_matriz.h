@@ -35,11 +35,10 @@ public:
     double menor_distancia(int origem, int destino) const override;
 
     // Métodos TSP
-    std::vector<int> tsp_guloso_densidade();
-    std::vector<int> tsp_reativo(int max_iteracoes);
-    std::vector<int> tsp_randomizado_controlado(int iteracoes, int N); // Adicione esta linha
-    double calcular_custo(const std::vector<int>& caminho);
-
+    std::vector<int> tsp_guloso_densidade() override;
+    std::vector<int> tsp_randomizado_controlado(int iteracoes, int N) override;
+    std::vector<int> tsp_reativo(int max_iteracoes) override;
+    double calcular_custo(const std::vector<int>& caminho) override;
 
     // Método auxiliar para contar arestas
     int get_num_arestas() const;

@@ -69,6 +69,19 @@ int main(int argc, char* argv[])  {
         return 0;
     }
 
+        // Novo modo: Converter TSP para formato do programa
+        if (argc > 1 && std::string(argv[1]) == "-converter_tsp") {
+            if (argc != 4) {
+                std::cerr << "Uso: " << argv[0] << " -converter_tsp <arquivo_tsp> <arquivo_saida>\n";
+                return 1;
+            }
+            std::string arquivo_tsp = argv[2];
+            std::string arquivo_saida = argv[3];
+            Util::converter_TSPLIB_para_formato_esperado(arquivo_tsp, arquivo_saida);
+            std::cout << "Arquivo TSP convertido: " << arquivo_saida << "\n";
+            return 0;
+        }
+
     // Fluxo tradicional: uso de -d (descrição) ou -p (NP-completos) com -m (matriz) ou -l (lista)
     if (argc < 4) {
         std::cerr << "Uso: " << argv[0] << " [-d|-p] [-m|-l] <arquivo_grafo>" << std::endl;

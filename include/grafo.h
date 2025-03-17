@@ -38,6 +38,11 @@
         virtual void deleta_no(int id) = 0;
         virtual void deleta_aresta(int origem, int destino) = 0;
         virtual double menor_distancia(int origem, int destino) const = 0;
+
+        virtual std::vector<int> tsp_guloso_densidade() = 0;
+        virtual std::vector<int> tsp_randomizado_controlado(int iteracoes, int N) = 0;
+        virtual std::vector<int> tsp_reativo(int max_iteracoes) = 0;
+        virtual double calcular_custo(const std::vector<int>& caminho) = 0;
     };
 
     #endif // GRAFO_H
