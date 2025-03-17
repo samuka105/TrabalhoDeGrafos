@@ -8,6 +8,9 @@
 #include "grafo_matriz.h"
 #include "grafo_lista.h"
 #include "util.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // --- Validação do Caminho ---
 bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
@@ -22,6 +25,14 @@ bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
 
 // --- Função para testar TODOS os algoritmos em uma instância ---
 void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
+    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===" << std::endl;
+
+    // Verifica conexidade antes de prosseguir
+    if (!grafo.eh_conexo()) {
+        std::cerr << "Erro: Grafo não é conexo! Ignorando testes para esta instância." << std::endl;
+        return;
+    }
+
     std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===" << std::endl;
 
     // Testar Guloso
@@ -76,26 +87,25 @@ void gerar_grafos_aleatorios_grandes() {
 }
 
 // --- Processar 5 instâncias TSP ---
-void processar_instancias_tsp() {
+/*void processar_instancias_tsp() {
     std::vector<std::string> arquivos_tsp = {
-        "entradas/berlin52.tsp",
-        "entradas/kroA100.tsp",
-        "entradas/pr1002.tsp",
         "entradas/d18512.tsp",
-        "entradas/rl5915.tsp"
     };
 
     for (const auto& arquivo : arquivos_tsp) {
         std::string saida = "entradas/" + arquivo.substr(arquivo.find_last_of("/") + 1) + "_convertido.txt";
         Util::converter_TSPLIB_para_formato_esperado(arquivo, saida);
     }
-}
+}*/
 
 // --- Main Atualizado ---
 int main() {
+    #ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    #endif
     // Passo 1: Gerar instâncias
     gerar_grafos_aleatorios_grandes();
-    processar_instancias_tsp();
+    //processar_instancias_tsp();
 
     // Passo 2: Lista de instâncias para testar
     std::vector<std::string> instancias = {
@@ -106,11 +116,8 @@ int main() {
         "entradas/grafo_12k.txt",
         "entradas/grafo_15k.txt",
         // TSP convertidos
-        "entradas/berlin52.tsp_convertido.txt",
-        "entradas/kroA100.tsp_convertido.txt",
-        "entradas/pr1002.tsp_convertido.txt",
-        "entradas/d18512.tsp_convertido.txt",
-        "entradas/rl5915.tsp_convertido.txt"
+       
+    
     };
 
     // Passo 3: Testar todas as instâncias

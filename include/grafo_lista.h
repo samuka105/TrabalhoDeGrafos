@@ -20,6 +20,7 @@ public:
     // Métodos da classe base (Grafo)
     void buscaProfundidade(int v, std::vector<bool>& visitado) const override;
     int n_conexo() const override;
+    virtual bool eh_conexo() const override;
     bool eh_completo() const override;
     bool eh_arvore() const override;
     bool possui_articulacao() const override;

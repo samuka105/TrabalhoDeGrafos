@@ -8,6 +8,8 @@
 #include <utility> // Para usar std::pair
 #include <sstream>
 #include <cmath>   // Para std::sqrt
+#include <random>
+#include <algorithm>
 
 namespace Util {
     std::vector<std::string> ler_arquivo(const std::string& arquivo) {
@@ -51,30 +53,50 @@ namespace Util {
     }
 
 // util.cpp
-    void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
-        std::ofstream saida(arquivo_saida);
-        if (!saida) throw std::runtime_error("Erro ao criar o arquivo de saída!");
-    
-        std::srand(std::time(0));
-        saida << vertices << " 0 0 1" << std::endl; // Grafo não direcionado, arestas ponderadas
-    
-        std::set<std::pair<int, int>> arestas_geradas; // Armazena arestas únicas
-    
-        for (int i = 0; i < arestas; ++i) {
-            int origem, destino;
-            do {
-                origem = std::rand() % vertices + 1;
-                destino = std::rand() % vertices + 1;
-                
-                // Garante origem <= destino para evitar duplicatas em grafos não direcionados
-                if (origem > destino) std::swap(origem, destino);
-                
-            } while (origem == destino || arestas_geradas.count({origem, destino})); // Evita laços e arestas repetidas
-    
-            int peso = std::rand() % 10 + 1;
-            saida << origem << " " << destino << " " << peso << std::endl;
-            arestas_geradas.insert({origem, destino}); // Registra a aresta
-        }
+
+void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
+    if (arestas < vertices - 1) {
+        throw std::runtime_error("Número de arestas insuficiente para formar um grafo conexo!");
+    }
+
+    std::ofstream saida(arquivo_saida);
+    if (!saida) throw std::runtime_error("Erro ao criar arquivo de saída!");
+    std::srand(std::time(0));
+
+    saida << vertices << " 0 0 1" << std::endl; // Grafo não direcionado
+
+    std::set<std::pair<int, int>> arestas_geradas;
+    std::vector<int> nos(vertices);
+    std::iota(nos.begin(), nos.end(), 1); // Preenche com 1, 2, ..., vertices
+
+    // Embaralha os nós para criar uma árvore aleatória
+    std::shuffle(nos.begin(), nos.end(), std::mt19937(std::random_device()()));
+
+    // Passo 1: Constrói uma árvore geradora mínima (garante conexidade)
+    for (size_t i = 1; i < nos.size(); ++i) {
+        int origem = nos[i];
+        int destino = nos[std::rand() % i]; // Conecta a um nó já existente na árvore
+        int peso = std::rand() % 10 + 1;
+        
+        // Garante ordem origem <= destino para evitar duplicatas
+        if (origem > destino) std::swap(origem, destino);
+        saida << origem << " " << destino << " " << peso << std::endl;
+        arestas_geradas.insert({origem, destino});
+    }
+
+    // Passo 2: Adiciona arestas extras até atingir o total desejado
+    int arestas_restantes = arestas - (vertices - 1);
+    for (int i = 0; i < arestas_restantes; ++i) {
+        int origem, destino;
+        do {
+            origem = std::rand() % vertices + 1;
+            destino = std::rand() % vertices + 1;
+            if (origem > destino) std::swap(origem, destino);
+        } while (origem == destino || arestas_geradas.count({origem, destino}));
+
+        int peso = std::rand() % 10 + 1;
+        saida << origem << " " << destino << " " << peso << std::endl;
+        arestas_geradas.insert({origem, destino});
     }
 }
 
@@ -92,7 +114,7 @@ namespace Util {
      * @param arquivo_TSPLIB Caminho para o arquivo TSPLIB.
      * @param arquivo_saida Caminho para o arquivo convertido.
      */
-    void Util::converter_TSPLIB_para_formato_esperado(const std::string& arquivo_TSPLIB, const std::string& arquivo_saida) {
+    void converter_TSPLIB_para_formato_esperado(const std::string& arquivo_TSPLIB, const std::string& arquivo_saida) {
         std::ifstream entrada(arquivo_TSPLIB);
         if (!entrada) {
             throw std::runtime_error("Erro ao abrir o arquivo TSPLIB!");
@@ -154,4 +176,4 @@ namespace Util {
             }
         }
     }
-
+}

@@ -6,6 +6,7 @@
 #include <functional>
 #include <fstream>
 #include <numeric>
+#include <stack>
 
 
 // Construtor padrão
@@ -51,6 +52,33 @@ int GrafoLista::n_conexo() const {
     }
     return componentes;
 }
+
+// grafo_lista.cpp
+// grafo_lista.cpp
+bool GrafoLista::eh_conexo() const {
+    if (num_vertices == 0) return true;
+
+    std::vector<bool> visitado(num_vertices, false);
+    std::stack<int> pilha;
+    pilha.push(0); // Começa do nó 0 (ID 1 no arquivo)
+    visitado[0] = true;
+
+    while (!pilha.empty()) {
+        int atual = pilha.top();
+        pilha.pop();
+
+        for (const auto& aresta : lista_adj[atual]) {
+            int vizinho = aresta.first;
+            if (!visitado[vizinho]) {
+                visitado[vizinho] = true;
+                pilha.push(vizinho);
+            }
+        }
+    }
+
+    // Verifica se todos os nós foram visitados
+    return std::all_of(visitado.begin(), visitado.end(), [](bool v) { return v; });
+}  
 
 // Retorna o grau do vértice
 int GrafoLista::get_grau(int vertice) const {

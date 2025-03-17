@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>  // Para std::accumulate
 #include <algorithm> // Para std::min e std::max
+#include <stack>
 
 // grafo_matriz.cpp
 
@@ -74,6 +75,41 @@ int GrafoMatriz::n_conexo() const {
         }
     }
     return componentes;
+}
+
+#include <queue>
+#include <algorithm>
+
+bool GrafoMatriz::eh_conexo() const {
+    if (num_vertices == 0) return true;
+
+    std::vector<bool> visitado(num_vertices, false);
+    std::stack<int> pilha;
+    
+    // Começa do primeiro nó (índice 0)
+    pilha.push(0);
+    visitado[0] = true;
+
+    while (!pilha.empty()) {
+        int atual = pilha.top();
+        pilha.pop();
+
+        // Verifica todos os nós possíveis
+        for (int vizinho = 0; vizinho < num_vertices; vizinho++) {
+            // Se há aresta e o vizinho não foi visitado
+            if (matriz[atual][vizinho] != 0 && !visitado[vizinho]) {
+                visitado[vizinho] = true;
+                pilha.push(vizinho);
+            }
+        }
+    }
+
+    // Verifica se todos foram visitados
+    return std::all_of(
+        visitado.begin(), 
+        visitado.end(), 
+        [](bool v) { return v; }
+    );
 }
 
 // Conta o número de arestas
@@ -214,21 +250,33 @@ void GrafoMatriz::carrega_grafo(const std::string& arquivo) {
     int vertices;
     entrada >> vertices >> direcionado >> peso_vertices >> peso_arestas;
     num_vertices = vertices;
-    if (capacidade < num_vertices)
+
+    // Redimensiona se necessário
+    if (capacidade < num_vertices) {
         redimensionarMatriz(num_vertices);
-    // Zera a matriz
-    for (int i = 0; i < num_vertices; ++i)
-        std::fill(matriz[i].begin(), matriz[i].begin() + num_vertices, 0);
+    }
+
+    // Zera toda a matriz (incluindo capacidade extra)
+    for (int i = 0; i < capacidade; ++i) {
+        std::fill(matriz[i].begin(), matriz[i].end(), 0);
+    }
 
     int origem, destino, peso;
     while (entrada >> origem >> destino >> peso) {
-        origem--; destino--;
-        if (origem == destino) throw std::runtime_error("Laços não são permitidos!");
-        if (matriz[origem][destino] != 0)
+        origem--; // Converte para 0-based
+        destino--;
+
+        if (origem == destino) 
+            throw std::runtime_error("Laços não são permitidos!");
+        if (origem < 0 || origem >= num_vertices || destino < 0 || destino >= num_vertices) 
+            throw std::runtime_error("ID de vértice inválido!");
+        if (matriz[origem][destino] != 0) 
             throw std::runtime_error("Aresta múltipla!");
+
         matriz[origem][destino] = peso;
-        if (!direcionado)
+        if (!direcionado) {
             matriz[destino][origem] = peso;
+        }
     }
 }
 

@@ -26,6 +26,7 @@
 
         // Métodos virtuais puros (devem ser implementados nas classes filhas)
         virtual void buscaProfundidade(int v, std::vector<bool>& visitado) const = 0;
+        virtual bool eh_conexo() const = 0;
         virtual int n_conexo() const = 0;
         virtual bool eh_completo() const = 0;
         virtual bool eh_bipartido() const = 0;
