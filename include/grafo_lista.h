@@ -33,6 +33,7 @@ public:
     double menor_distancia(int origem, int destino) const override;
  
     // Métodos TSP
+    std::vector<int> tsp_guloso_densidade();
     std::vector<int> tsp_randomizado_controlado(int iteracoes, int N = 3);
     double calcular_custo(const std::vector<int>& caminho);
 

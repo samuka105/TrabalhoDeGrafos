@@ -3,6 +3,8 @@
 #include <unordered_set>
 #include <chrono>
 #include <cmath>
+#include <numeric>          // Para std::accumulate
+#include <algorithm>        // Para std::min e std::max
 #include "grafo_matriz.h"
 #include "grafo_lista.h"
 #include "util.h"
@@ -19,9 +21,9 @@ bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
 }
 
 // --- Teste Guloso (Matriz) ---
-void testar_guloso_matriz() {
+void testar_guloso_matriz(const std::string& arquivo) {
     GrafoMatriz gm;
-    gm.carrega_grafo("entradas/grafo_4nos.txt");
+    gm.carrega_grafo(arquivo);
     
     auto inicio = std::chrono::high_resolution_clock::now();
     auto caminho = gm.tsp_guloso_densidade();
@@ -29,46 +31,99 @@ void testar_guloso_matriz() {
     std::chrono::duration<double> duracao = fim - inicio;
 
     std::cout << "\n=== TESTE GULOSO (MATRIZ) ===" << std::endl;
-    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gm.calcular_custo(caminho) << std::endl;
+    std::cout << "Arquivo: " << arquivo << std::endl;
+    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gm.calcular_custo(caminho);
+    std::cout << " | Válido: " << (caminho_valido(caminho, gm.get_ordem()) ? "Sim" : "Não") << std::endl;
+}
+
+// --- Teste Guloso (Lista) ---
+void testar_guloso_lista(const std::string& arquivo) {
+    GrafoLista gl;
+    gl.carrega_grafo(arquivo);
+    
+    auto inicio = std::chrono::high_resolution_clock::now();
+    auto caminho = gl.tsp_guloso_densidade(); // Implemente este método na GrafoLista!
+    auto fim = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duracao = fim - inicio;
+
+    std::cout << "\n=== TESTE GULOSO (LISTA) ===" << std::endl;
+    std::cout << "Arquivo: " << arquivo << std::endl;
+    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gl.calcular_custo(caminho);
+    std::cout << " | Válido: " << (caminho_valido(caminho, gl.get_ordem()) ? "Sim" : "Não") << std::endl;
+}
+
+// --- Teste Randomizado (Matriz) ---
+void testar_randomizado_matriz(const std::string& arquivo, int iteracoes) {
+    GrafoMatriz gm;
+    gm.carrega_grafo(arquivo);
+    
+    auto inicio = std::chrono::high_resolution_clock::now();
+    auto caminho = gm.tsp_randomizado_controlado(iteracoes, 3); // Implemente este método na GrafoMatriz!
+    auto fim = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duracao = fim - inicio;
+
+    std::cout << "\n=== TESTE RANDOMIZADO (MATRIZ) ===" << std::endl;
+    std::cout << "Arquivo: " << arquivo << std::endl;
+    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gm.calcular_custo(caminho);
+    std::cout << " | Válido: " << (caminho_valido(caminho, gm.get_ordem()) ? "Sim" : "Não") << std::endl;
 }
 
 // --- Teste Randomizado (Lista) ---
-void testar_randomizado_lista() {
+void testar_randomizado_lista(const std::string& arquivo, int iteracoes) {
     GrafoLista gl;
-    gl.carrega_grafo("entradas/grafo_10nos.txt");
+    gl.carrega_grafo(arquivo);
     
     auto inicio = std::chrono::high_resolution_clock::now();
-    auto caminho = gl.tsp_randomizado_controlado(50); // 50 iterações
+    auto caminho = gl.tsp_randomizado_controlado(iteracoes, 3);
     auto fim = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duracao = fim - inicio;
 
     std::cout << "\n=== TESTE RANDOMIZADO (LISTA) ===" << std::endl;
-    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gl.calcular_custo(caminho) << std::endl;
+    std::cout << "Arquivo: " << arquivo << std::endl;
+    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gl.calcular_custo(caminho);
+    std::cout << " | Válido: " << (caminho_valido(caminho, gl.get_ordem()) ? "Sim" : "Não") << std::endl;
 }
 
 // --- Teste Reativo (Matriz) ---
-void testar_reativo_matriz() {
+void testar_reativo_matriz(const std::string& arquivo, int iteracoes) {
     GrafoMatriz gm;
-    gm.carrega_grafo("entradas/grafo_10nos.txt");
+    gm.carrega_grafo(arquivo);
     
     auto inicio = std::chrono::high_resolution_clock::now();
-    auto caminho = gm.tsp_reativo(30); // 30 iterações
+    auto caminho = gm.tsp_reativo(iteracoes);
     auto fim = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duracao = fim - inicio;
 
     std::cout << "\n=== TESTE REATIVO (MATRIZ) ===" << std::endl;
-    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gm.calcular_custo(caminho) << std::endl;
+    std::cout << "Arquivo: " << arquivo << std::endl;
+    std::cout << "Tempo: " << duracao.count() << "s | Custo: " << gm.calcular_custo(caminho);
+    std::cout << " | Válido: " << (caminho_valido(caminho, gm.get_ordem()) ? "Sim" : "Não") << std::endl;
 }
 
 // --- Geração de Grafos de Teste ---
 void gerar_grafos_teste() {
-    Util::gerar_grafo_aleatorio(4, 6, "entradas/grafo_4nos.txt");    // Grafo pequeno
-    Util::gerar_grafo_aleatorio(10, 15, "entradas/grafo_10nos.txt"); // Grafo médio
+    Util::gerar_grafo_aleatorio(4, 6, "entradas/grafo_4nos.txt");
+    Util::gerar_grafo_aleatorio(10, 15, "entradas/grafo_10nos.txt");
+    Util::gerar_grafo_aleatorio(5000, 20000, "entradas/grafo_5000.txt"); // Grafo grande
 }
 
+
+
 int main() {
-    gerar_grafos_teste(); // Gera os arquivos na pasta 'entradas/'
-    testar_guloso_matriz();
-    testar_randomizado_lista();
+    gerar_grafos_teste();
+
+    // Testes em grafo pequeno
+    testar_guloso_matriz("entradas/grafo_4nos.txt");
+    testar_guloso_lista("entradas/grafo_4nos.txt");
+
+    // Testes em grafo médio
+    testar_randomizado_matriz("entradas/grafo_10nos.txt", 50);
+    testar_randomizado_lista("entradas/grafo_10nos.txt", 50);
+    testar_reativo_matriz("entradas/grafo_10nos.txt", 30);
+
+    // Testes em grafo grande (comente se não for executar)
+    testar_guloso_matriz("entradas/grafo_5000.txt");
+    testar_reativo_matriz("entradas/grafo_5000.txt", 10);
+
     return 0;
 }

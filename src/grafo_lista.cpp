@@ -340,6 +340,52 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
     return melhor_caminho;
 }
 
+std::vector<int> GrafoLista::tsp_guloso_densidade() {
+    std::vector<int> caminho;
+    std::vector<bool> visitado(num_vertices, false);
+    int atual = 0; // Vértice inicial (pode ser rand() % num_vertices para aleatório)
+    visitado[atual] = true;
+    caminho.push_back(atual);
+
+    for (int i = 1; i < num_vertices; i++) {
+        double menor_densidade = std::numeric_limits<double>::max();
+        int proxima = -1;
+
+        // Passo 1: Iterar pelas arestas do vértice atual
+        for (const auto& aresta : lista_adj[atual]) {
+            int destino = aresta.first;
+            if (!visitado[destino]) {
+                // Passo 2: Calcular conexões não visitadas do destino
+                int conexoes_nao_visitadas = 0;
+                for (const auto& aresta_destino : lista_adj[destino]) {
+                    if (!visitado[aresta_destino.first]) {
+                        conexoes_nao_visitadas++;
+                    }
+                }
+                // Passo 3: Calcular densidade (distância / (conexões + 1))
+                double densidade = aresta.second / (conexoes_nao_visitadas + 1.0);
+                if (densidade < menor_densidade) {
+                    menor_densidade = densidade;
+                    proxima = destino;
+                }
+            }
+        }
+
+        if (proxima == -1) break; // Grafo desconexo
+        visitado[proxima] = true;
+        caminho.push_back(proxima);
+        atual = proxima;
+    }
+
+    // Verificar se o caminho é válido
+    if (caminho.size() != static_cast<size_t>(num_vertices)) {
+        throw std::runtime_error("Grafo não é conexo!");
+    }
+
+    return caminho;
+}
+
+
 double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
     double custo = 0;
     for (size_t i = 0; i < caminho.size() - 1; i++) {
