@@ -210,7 +210,7 @@ bool GrafoLista::eh_bipartido() const {
 // Carrega o grafo a partir de arquivo
 void GrafoLista::carrega_grafo(const std::string& arquivo) {
     std::ifstream entrada(arquivo);
-    if (!entrada) throw std::runtime_error("Erro ao abrir o arquivo!");
+    if (!entrada) throw std::runtime_error("Erro ao abrir o arquivo: " + arquivo);
 
     int vertices;
     entrada >> vertices >> direcionado >> peso_vertices >> peso_arestas;

@@ -13,11 +13,14 @@
 #endif
 
 // --- Validação do Caminho ---
-bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
+bool caminho_valido(const std::vector<int>& caminho, int num_vertices, const Grafo& grafo) {
     if (caminho.empty() || caminho.front() != caminho.back()) return false;
     std::unordered_set<int> visitados;
     for (size_t i = 0; i < caminho.size() - 1; i++) {
-        if (visitados.count(caminho[i]) > 0) return false;
+        if (visitados.count(caminho[i])) return false;
+        if (grafo.menor_distancia(caminho[i], caminho[i+1]) == std::numeric_limits<double>::infinity()) {
+            return false;
+        }
         visitados.insert(caminho[i]);
     }
     return (visitados.size() == static_cast<size_t>(num_vertices));
@@ -25,7 +28,6 @@ bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
 
 // --- Função para testar TODOS os algoritmos em uma instância ---
 void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
-    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===" << std::endl;
 
     // Verifica conexidade antes de prosseguir
     if (!grafo.eh_conexo()) {
@@ -41,7 +43,7 @@ void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
     auto fim = std::chrono::high_resolution_clock::now();
     std::cout << "[Guloso] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
               << "s | Custo: " << grafo.calcular_custo(caminho_guloso) 
-              << " | Válido: " << (caminho_valido(caminho_guloso, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
+              << " | Válido: " << (caminho_valido(caminho_guloso, grafo.get_ordem(), grafo) ? "Sim" : "Não") << std::endl;
 
     // Testar Randomizado
     inicio = std::chrono::high_resolution_clock::now();
@@ -49,7 +51,7 @@ void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
     fim = std::chrono::high_resolution_clock::now();
     std::cout << "[Randomizado] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
               << "s | Custo: " << grafo.calcular_custo(caminho_randomizado) 
-              << " | Válido: " << (caminho_valido(caminho_randomizado, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
+              << " | Válido: " << (caminho_valido(caminho_randomizado, grafo.get_ordem(), grafo) ? "Sim" : "Não") << std::endl;
 
     // Testar Reativo
     inicio = std::chrono::high_resolution_clock::now();
@@ -57,13 +59,13 @@ void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
     fim = std::chrono::high_resolution_clock::now();
     std::cout << "[Reativo] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
               << "s | Custo: " << grafo.calcular_custo(caminho_reativo) 
-              << " | Válido: " << (caminho_valido(caminho_reativo, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
+              << " | Válido: " << (caminho_valido(caminho_reativo, grafo.get_ordem(), grafo) ? "Sim" : "Não") << std::endl;
 }
 
 // --- Testar Matriz e Lista para uma instância ---
 void testar_instancia(const std::string& arquivo) {
     // Testar com Matriz (apenas para grafos pequenos)
-    if (arquivo.find("grafo_5k") == std::string::npos) { // Ajuste conforme necessário
+    if (arquivo.find("grafo_") == std::string::npos) { // Ajuste conforme necessário
         GrafoMatriz gm;
         gm.carrega_grafo(arquivo);
         std::cout << "\n[ESTRUTURA: MATRIZ]";
@@ -79,11 +81,31 @@ void testar_instancia(const std::string& arquivo) {
 
 // --- Gerar 5 grafos aleatórios grandes ---
 void gerar_grafos_aleatorios_grandes() {
-    Util::gerar_grafo_aleatorio(5000, 20000, "entradas/grafo_5k.txt");
-    Util::gerar_grafo_aleatorio(7000, 30000, "entradas/grafo_7k.txt");
-    Util::gerar_grafo_aleatorio(10000, 40000, "entradas/grafo_10k.txt");
-    Util::gerar_grafo_aleatorio(12000, 50000, "entradas/grafo_12k.txt");
-    Util::gerar_grafo_aleatorio(15000, 60000, "entradas/grafo_15k.txt");
+    // Gera 15 instâncias de 5k até 33k, passo de 2k
+    const std::vector<std::pair<int, int>> configs = {
+        {5000, 15000},   // 5k vértices, 15k arestas
+        {7000, 21000},   // 7k vértices, 21k arestas
+        {9000, 27000},   // 9k vértices, 27k arestas
+        {11000, 33000},  // 11k vértices, 33k arestas
+        {13000, 39000},  // 13k vértices, 39k arestas
+        {15000, 45000},  // 15k vértices, 45k arestas
+        {17000, 51000},  // 17k vértices, 51k arestas
+        {19000, 57000},  // 19k vértices, 57k arestas
+        {21000, 63000},  // 21k vértices, 63k arestas
+        {23000, 69000},  // 23k vértices, 69k arestas
+        {25000, 75000},  // 25k vértices, 75k arestas
+        {27000, 81000},  // 27k vértices, 81k arestas
+        {29000, 87000},  // 29k vértices, 87k arestas
+        {31000, 93000},  // 31k vértices, 93k arestas
+        {33000, 99000}   // 33k vértices, 99k arestas
+    };
+
+    for (const auto& config : configs) {
+        int vertices = config.first;
+        int arestas = config.second;
+        std::string nome = "entradas/grafo_" + std::to_string(vertices/1000) + "k.txt";
+        Util::gerar_grafo_aleatorio(vertices, arestas, nome);
+    }
 }
 
 // --- Processar 5 instâncias TSP ---
@@ -109,15 +131,12 @@ int main() {
 
     // Passo 2: Lista de instâncias para testar
     std::vector<std::string> instancias = {
-        // Grafos aleatórios
-        "entradas/grafo_5k.txt",
-        "entradas/grafo_7k.txt",
-        "entradas/grafo_10k.txt",
-        "entradas/grafo_12k.txt",
-        "entradas/grafo_15k.txt",
-        // TSP convertidos
-       
-    
+        // Grafos aleatórios (15 instâncias)
+        "entradas/grafo_5k.txt", "entradas/grafo_7k.txt", "entradas/grafo_9k.txt",
+        "entradas/grafo_11k.txt", "entradas/grafo_13k.txt", "entradas/grafo_15k.txt",
+        "entradas/grafo_17k.txt", "entradas/grafo_19k.txt", "entradas/grafo_21k.txt",
+        "entradas/grafo_23k.txt", "entradas/grafo_25k.txt", "entradas/grafo_27k.txt",
+        "entradas/grafo_29k.txt", "entradas/grafo_31k.txt", "entradas/grafo_33k.txt"
     };
 
     // Passo 3: Testar todas as instâncias
