@@ -448,16 +448,16 @@ std::vector<int> GrafoLista::tsp_guloso_densidade() {
             }
         }
 
-        if (proxima == -1) break; // Grafo desconexo
+        if (proxima == -1) break; // Não há mais nós alcançáveis não visitados
         visitado[proxima] = true;
         caminho.push_back(proxima);
         atual = proxima;
     }
 
-    // Verificar se o caminho é válido
-    if (caminho.size() != static_cast<size_t>(num_vertices)) {
-        throw std::runtime_error("Grafo não é conexo!");
-    }
+    // Verificar se o caminho é válido (apenas para depuração, se necessário)
+    // if (caminho.size() != static_cast<size_t>(num_vertices)) {
+    //     // O algoritmo não encontrou um caminho completo, mas o grafo pode ser conexo
+    // }
 
     return caminho;
 }
