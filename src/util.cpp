@@ -55,7 +55,7 @@ namespace Util {
 
 // util.cpp
 
-void Util::gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
+void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
     if (arestas < vertices - 1) {
         throw std::runtime_error("Número de arestas insuficiente para formar um grafo conexo!");
     }
@@ -70,7 +70,7 @@ void Util::gerar_grafo_aleatorio(int vertices, int arestas, const std::string& a
     std::vector<int> nos(vertices);
     std::iota(nos.begin(), nos.end(), 1);
 
-    // --- CICLO HAMILTONIANO FORÇADO (ALTERAÇÃO) ---
+    // --- Passo 1: Ciclo Hamiltoniano Forçado ---
     std::vector<int> ciclo(nos.begin(), nos.end());
     std::shuffle(ciclo.begin(), ciclo.end(), std::mt19937(std::random_device()()));
 
@@ -78,28 +78,45 @@ void Util::gerar_grafo_aleatorio(int vertices, int arestas, const std::string& a
         int origem = ciclo[i];
         int destino = ciclo[(i + 1) % ciclo.size()];
         if (origem > destino) std::swap(origem, destino);
-        if (!arestas_geradas.count({origem, destino})) {
+        if (arestas_geradas.insert({origem, destino}).second) {
             int peso = std::rand() % 10 + 1;
             saida << origem << " " << destino << " " << peso << std::endl;
-            arestas_geradas.insert({origem, destino});
         }
     }
 
-    // Árvore geradora mínima (código original mantido)
+    // --- Passo 2: Árvore Geradora Mínima ---
     std::shuffle(nos.begin(), nos.end(), std::mt19937(std::random_device()()));
     for (size_t i = 1; i < nos.size(); ++i) {
         int origem = nos[i];
         int destino = nos[std::rand() % i];
         if (origem > destino) std::swap(origem, destino);
+        if (arestas_geradas.insert({origem, destino}).second) {
+            int peso = std::rand() % 10 + 1;
+            saida << origem << " " << destino << " " << peso << std::endl;
+        }
+    }
+
+    // --- Passo 3: Arestas Extras (Garantindo Unicidade) ---
+    int arestas_restantes = arestas - arestas_geradas.size();
+    int max_tentativas = 1000000; // Evita loops infinitos
+
+    for (int i = 0; i < arestas_restantes; ++i) {
+        int tentativas = 0;
+        int origem, destino;
+        do {
+            origem = std::rand() % vertices + 1;
+            destino = std::rand() % vertices + 1;
+            if (origem > destino) std::swap(origem, destino);
+            tentativas++;
+        } while ((origem == destino || arestas_geradas.count({origem, destino})) && tentativas < max_tentativas);
+
+        if (tentativas >= max_tentativas) {
+            throw std::runtime_error("Não foi possível gerar arestas únicas!");
+        }
+
         int peso = std::rand() % 10 + 1;
         saida << origem << " " << destino << " " << peso << std::endl;
         arestas_geradas.insert({origem, destino});
-    }
-
-    // Arestas extras (código ajustado)
-    int arestas_restantes = arestas - (vertices * 2 - 1); // Ajuste para incluir o ciclo
-    for (int i = 0; i < arestas_restantes; ++i) {
-        // ... código original ...
     }
 }
 
