@@ -44,54 +44,30 @@ bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
 }
 // --- Função para testar TODOS os algoritmos em uma instância ---
 void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
-    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===\n";
-    
-    std::cout << "[DEBUG] Iniciando teste de conexidade...\n";
-    bool conexo = grafo.eh_conexo();
-    std::cout << "[DEBUG] Resultado da conexidade: " << (conexo ? "Conexo" : "Desconexo") << "\n\n";
-    if (!conexo) {
+    if (!grafo.eh_conexo()) {
         std::cerr << "Grafo não é conexo! Ignorando TSP.\n";
         return;
     }
 
-    // Verifica se há pelo menos um ciclo Hamiltoniano (heurística simples)
     bool ciclo_possivel = (grafo.get_num_arestas() >= grafo.get_ordem() * 2);
     if (!ciclo_possivel) {
         std::cerr << "Grafo não tem arestas suficientes para ciclo Hamiltoniano! Ignorando TSP.\n";
         return;
     }
-    
-
-
-    if (!conexo) {
-        std::cerr << "Erro: Grafo não é conexo ou completo! Ignorando TSP\n";
-        return;
-    }
 
     auto executar_algoritmo = [&](const std::string& nome, auto algoritmo) {
-        std::cout << "[DEBUG] Iniciando algoritmo " << nome << "...\n";
-        auto inicio = std::chrono::high_resolution_clock::now();
         
-        std::vector<int> caminho;
-        try {
-            caminho = algoritmo();
-        } catch (const std::exception& e) {
-            std::cerr << "[ERRO] Falha no algoritmo " << nome << ": " << e.what() << "\n";
-            return;
-        }
-
+        auto inicio = std::chrono::high_resolution_clock::now();
+        std::vector<int> caminho = algoritmo();
         auto fim = std::chrono::high_resolution_clock::now();
         double tempo = std::chrono::duration<double>(fim - inicio).count();
 
-        std::cout << "[DEBUG] Caminho " << nome << " (" << caminho.size() << " nós): ";
-        for (int node : caminho) std::cout << node+1 << " ";
-        std::cout << "\n";
-
-        std::cout << "[" << nome << "] Tempo: " << tempo << "s | Custo: " 
-                  << grafo.calcular_custo(caminho) << " | Válido: " 
-                  << (caminho_valido(caminho, grafo.get_ordem()) ? "Sim" : "Não") << "\n\n";
+        std::cout << "[" << nome << "] Tempo: " << tempo << "s | Custo: "
+                  << grafo.calcular_custo(caminho) << " | Válido: "
+                  << (caminho_valido(caminho, grafo.get_ordem()) ? "Sim" : "Não") << "\n";
     };
 
+    grafo.diagnosticar_grafo();  // Adicione esta linha antes dos algoritmos
     executar_algoritmo("Guloso", [&](){ return grafo.tsp_guloso_densidade(); });
     executar_algoritmo("Randomizado", [&](){ return grafo.tsp_randomizado_controlado(50, 3); });
     executar_algoritmo("Reativo", [&](){ return grafo.tsp_reativo(30); });

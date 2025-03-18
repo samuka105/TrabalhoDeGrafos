@@ -32,6 +32,7 @@ public:
     void novo_no() override;
     void nova_aresta(int origem, int destino, int peso) override;
     void deleta_no(int id) override;
+    double calcular_custo_caminho_parcial(const std::vector<int> &caminho);
     void deleta_aresta(int origem, int destino) override;
     double menor_distancia(int origem, int destino) const override;
     int get_num_arestas() const override;
@@ -39,6 +40,7 @@ public:
     // Métodos TSP
     std::vector<int> tsp_guloso_densidade() override;
     std::vector<int> tsp_randomizado_controlado(int iteracoes, int N) override;
+    void diagnosticar_grafo() override;
     std::vector<int> tsp_reativo(int max_iteracoes) override;
     double calcular_custo(const std::vector<int>& caminho) override;
 

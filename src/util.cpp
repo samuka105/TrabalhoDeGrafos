@@ -61,30 +61,30 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
     }
 
     std::ofstream saida(arquivo_saida);
-    if (!saida) throw std::runtime_error("Erro ao criar arquivo de saída!");
-    std::srand(std::time(0));
+    if (!saida) {
+        throw std::runtime_error("Erro ao criar arquivo de saída!");
+    }
 
+    std::srand(std::time(0));
     saida << vertices << " 0 0 1" << std::endl;
 
     std::set<std::pair<int, int>> arestas_geradas;
     std::vector<int> nos(vertices);
     std::iota(nos.begin(), nos.end(), 1);
 
-    // --- Passo 1: Ciclo Hamiltoniano Forçado ---
+    // Ciclo Hamiltoniano Forçado
     std::vector<int> ciclo(nos.begin(), nos.end());
     std::shuffle(ciclo.begin(), ciclo.end(), std::mt19937(std::random_device()()));
-
-    for (size_t i = 0; i < ciclo.size(); ++i) {
-        int origem = ciclo[i];
-        int destino = ciclo[(i + 1) % ciclo.size()];
-        if (origem > destino) std::swap(origem, destino);
-        if (arestas_geradas.insert({origem, destino}).second) {
-            int peso = std::rand() % 10 + 1;
-            saida << origem << " " << destino << " " << peso << std::endl;
-        }
+    
+    // Garante conexão do último com o primeiro
+    int primeiro = ciclo[0];
+    int ultimo = ciclo.back();
+    if (arestas_geradas.insert({std::min(primeiro, ultimo), std::max(primeiro, ultimo)}).second) {
+        int peso = std::rand() % 10 + 1;
+        saida << primeiro << " " << ultimo << " " << peso << std::endl;
     }
 
-    // --- Passo 2: Árvore Geradora Mínima ---
+    // Árvore Geradora Mínima
     std::shuffle(nos.begin(), nos.end(), std::mt19937(std::random_device()()));
     for (size_t i = 1; i < nos.size(); ++i) {
         int origem = nos[i];
@@ -96,9 +96,9 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
         }
     }
 
-    // --- Passo 3: Arestas Extras (Garantindo Unicidade) ---
+    // Arestas Extras
     int arestas_restantes = arestas - arestas_geradas.size();
-    int max_tentativas = 1000000; // Evita loops infinitos
+    int max_tentativas = 1000000;
 
     for (int i = 0; i < arestas_restantes; ++i) {
         int tentativas = 0;
@@ -119,7 +119,6 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
         arestas_geradas.insert({origem, destino});
     }
 }
-
    /**
      * @brief Converte um arquivo TSPLIB para o formato esperado pelo programa.
      * 
@@ -137,8 +136,8 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
     void converter_TSPLIB_para_formato_esperado(
         const std::string& arquivo_TSPLIB, 
         const std::string& arquivo_saida, 
-        int k_vizinhos = 20  // Parâmetro ajustável
-    ) {
+        int k_vizinhos
+    ){
         std::ifstream entrada(arquivo_TSPLIB);
         if (!entrada) {
             throw std::runtime_error("Erro ao abrir o arquivo TSPLIB!");
@@ -194,4 +193,5 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
             saida << (par.first + 1) << " " << (par.second + 1) << " " << peso << std::endl;
         }
     }
-}} 
+  }
+} 

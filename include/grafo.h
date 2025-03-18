@@ -40,6 +40,7 @@
         virtual void deleta_aresta(int origem, int destino) = 0;
         virtual double menor_distancia(int origem, int destino) const = 0;
         virtual int get_num_arestas() const = 0;
+        virtual void diagnosticar_grafo() = 0;
 
         virtual std::vector<int> tsp_guloso_densidade() = 0;
         virtual std::vector<int> tsp_randomizado_controlado(int iteracoes, int N) = 0;

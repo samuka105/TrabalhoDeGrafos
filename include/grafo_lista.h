@@ -37,9 +37,11 @@ public:
     // Métodos TSP
     std::vector<int> tsp_guloso_densidade() override;
     std::vector<int> tsp_randomizado_controlado(int iteracoes, int N) override;
+    double calcular_custo_caminho_parcial(const std::vector<int> &caminho);
     std::vector<int> tsp_reativo(int max_iteracoes) override;
     double calcular_custo(const std::vector<int>& caminho) override;
 
+    void diagnosticar_grafo() override;
     // Método específico para lista
     int get_grau(int vertice) const;
 };

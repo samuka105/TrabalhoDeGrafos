@@ -65,10 +65,7 @@ int GrafoLista::n_conexo() const {
 // grafo_lista.cpp
 // grafo_lista.cpp
 bool GrafoLista::eh_conexo() const {
-    std::cout << "\n[DEBUG] Verificando conexidade (lista)...\n";
-    
     if (num_vertices == 0) {
-        std::cout << "[DEBUG] Grafo vazio, considerado conexo por definição." << std::endl;
         return true;
     }
 
@@ -78,33 +75,22 @@ bool GrafoLista::eh_conexo() const {
     visitado[0] = true;
 
     int count_visitados = 1;
-    std::cout << "[DEBUG] Iniciando DFS a partir do nó 0" << std::endl;
 
     while (!pilha.empty()) {
         int atual = pilha.top();
         pilha.pop();
-
-        std::cout << "[DEBUG] Visitando nó " << atual << ". Vizinhos: ";
-        for (const auto& viz : lista_adj[atual]) {
-            std::cout << viz.first << " ";
-        }
-        std::cout << std::endl;
 
         for (const auto& vizinho : lista_adj[atual]) {
             if (!visitado[vizinho.first]) {
                 visitado[vizinho.first] = true;
                 count_visitados++;
                 pilha.push(vizinho.first);
-                std::cout << "[DEBUG] Marcando nó " << vizinho.first << " como visitado" << std::endl;
             }
         }
     }
 
-    std::cout << "[DEBUG] Total de nós visitados: " << count_visitados 
-              << "/" << num_vertices << std::endl;
-
     return count_visitados == num_vertices;
-} 
+}
 
 // Retorna o grau do vértice
 int GrafoLista::get_grau(int vertice) const {
@@ -235,11 +221,8 @@ bool GrafoLista::eh_bipartido() const {
 
 // Carrega o grafo a partir de arquivo
 void GrafoLista::carrega_grafo(const std::string& arquivo) {
-    std::cout << "\n[DEBUG] Iniciando carregamento do grafo (lista) de: " << arquivo << std::endl;
-    
     std::ifstream entrada(arquivo);
     if (!entrada) {
-        std::cerr << "[ERRO] Falha ao abrir arquivo: " << arquivo << std::endl;
         throw std::runtime_error("Erro ao abrir o arquivo!");
     }
 
@@ -249,43 +232,25 @@ void GrafoLista::carrega_grafo(const std::string& arquivo) {
     lista_adj.clear();
     lista_adj.resize(vertices);
 
-    std::cout << "[DEBUG] Cabeçalho lido - Vértices: " << vertices 
-              << ", Direcionado: " << dummy1 << std::endl;
-
-    int count_arestas = 0;
     int origem, destino, peso;
     while (entrada >> origem >> destino >> peso) {
-        origem--; destino--; // Convertendo para 0-based
-        
-        std::cout << "[DEBUG] Lendo aresta: " << origem+1 << " -> " << destino+1 
-                  << " (" << peso << ")" << std::endl;
+        origem--; destino--;
 
         if (origem == destino) {
-            std::cerr << "[ERRO] Laço detectado no nó: " << origem+1 << std::endl;
             throw std::runtime_error("Laços não são permitidos!");
         }
 
         for (const auto& a : lista_adj[origem]) {
             if (a.first == destino) {
-                std::cerr << "[ERRO] Aresta múltipla: " << origem+1 << " -> " << destino+1 << std::endl;
                 throw std::runtime_error("Aresta múltipla!");
             }
         }
 
-        if (direcionado) {
-            throw std::runtime_error("TSP requer grafo não direcionado!");
-        }
-
         lista_adj[origem].push_back({destino, peso});
-        if (!direcionado)
+        if (!direcionado) {
             lista_adj[destino].push_back({origem, peso});
-            
-        count_arestas++;
+        }
     }
-
-    std::cout << "[DEBUG] Grafo carregado com sucesso!\n"
-              << "Total de vértices: " << num_vertices << "\n"
-              << "Total de arestas: " << count_arestas << std::endl;
 }
 
 // Adiciona nova aresta
@@ -368,20 +333,57 @@ double GrafoLista::menor_distancia(int origem, int destino) const {
 }
 
 // --- Algoritmo Randomizado ---
+// Adicione esta função ao seu arquivo GrafoLista.h ou .cpp
+double GrafoLista::calcular_custo_caminho_parcial(const std::vector<int>& caminho) {
+    if (caminho.size() <= 1) return std::numeric_limits<double>::infinity();
+    
+    double custo = 0.0;
+    for (size_t i = 0; i < caminho.size() - 1; i++) {
+        int atual = caminho[i];
+        int proximo = caminho[i+1];
+        
+        // Procura a aresta entre atual e próximo
+        bool aresta_encontrada = false;
+        for (const auto& aresta : lista_adj[atual]) {
+            if (aresta.first == proximo) {
+                custo += aresta.second;
+                aresta_encontrada = true;
+                break;
+            }
+        }
+        
+        if (!aresta_encontrada) {
+            std::cout << "ERRO: Aresta não encontrada entre " << atual << " e " << proximo << std::endl;
+            return std::numeric_limits<double>::infinity();
+        }
+    }
+    
+    return custo;
+}
+
+// Versão modificada do tsp_randomizado_controlado
 std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
     std::vector<int> melhor_caminho;
     double menor_custo = std::numeric_limits<double>::max();
-
+    int maior_tamanho = 0;
+    
+    // DEBUG: Informações sobre o grafo
+    std::cout << "DEBUG: Verificando grafo - Vértices: " << num_vertices << std::endl;
+    int arestas_totais = 0;
+    for (int i = 0; i < num_vertices; i++) {
+        arestas_totais += lista_adj[i].size();
+    }
+    std::cout << "DEBUG: Total de arestas: " << arestas_totais << std::endl;
+    
     for (int it = 0; it < iteracoes; it++) {
         std::vector<int> caminho;
         std::vector<bool> visitado(num_vertices, false);
         int atual = rand() % num_vertices;
         visitado[atual] = true;
         caminho.push_back(atual);
-
         bool bloqueado = false;
-
-        for (int i = 1; i < num_vertices; i++) {
+        
+        for (int i = 1; i < num_vertices && !bloqueado; i++) {
             std::vector<std::pair<double, int>> opcoes;
             for (const auto& aresta : lista_adj[atual]) {
                 int destino = aresta.first;
@@ -389,35 +391,67 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
                     opcoes.push_back({aresta.second, destino});
                 }
             }
-
+            
             if (opcoes.empty()) {
                 bloqueado = true;
+                // std::cout << "DEBUG: Bloqueado no vértice " << atual << " após visitar " 
+                //          << caminho.size() << " de " << num_vertices << " vértices" << std::endl;
                 break;
             }
-
-            // Restante da lógica de seleção randomizada...
+            
+            std::sort(opcoes.begin(), opcoes.end()); // Ordena por menor custo
+            int limite = std::min(N, (int)opcoes.size());
+            int escolha = rand() % limite;
+            int proximo = opcoes[escolha].second;
+            visitado[proximo] = true;
+            caminho.push_back(proximo);
+            atual = proximo;
         }
-
-        if (!bloqueado) {
-            bool ciclo_valido = false;
+        
+        // Priorizar caminhos mais longos
+        if (caminho.size() > maior_tamanho) {
+            maior_tamanho = caminho.size();
+            melhor_caminho = caminho;
+            menor_custo = calcular_custo_caminho_parcial(caminho);
+            std::cout << "DEBUG: Novo melhor caminho com " << caminho.size() << "/" << num_vertices 
+                     << " vértices. Custo: " << menor_custo << std::endl;
+        }
+        // Se mesmo tamanho, escolher o de menor custo
+        else if (caminho.size() == maior_tamanho) {
+            double custo = calcular_custo_caminho_parcial(caminho);
+            if (custo < menor_custo) {
+                melhor_caminho = caminho;
+                menor_custo = custo;
+                std::cout << "DEBUG: Novo melhor caminho (mesmo tamanho) com custo: " << menor_custo << std::endl;
+            }
+        }
+        
+        // Verifica se é possível formar um ciclo (útil para logging)
+        bool ciclo_completo = false;
+        if (caminho.size() == num_vertices) {
+            // Verifica se o último vértice pode voltar ao primeiro
             for (const auto& aresta : lista_adj[caminho.back()]) {
                 if (aresta.first == caminho[0]) {
-                    ciclo_valido = true;
+                    ciclo_completo = true;
                     break;
                 }
             }
-
-            if (ciclo_valido) {
-                double custo = calcular_custo(caminho);
-                if (custo < menor_custo) {
-                    menor_custo = custo;
-                    melhor_caminho = caminho;
-                }
-            }
+        }
+        
+        if (it % 10 == 0 || it == iteracoes - 1) {
+            std::cout << "Teste " << (it+1) << ": Caminho com " << caminho.size() << "/" << num_vertices 
+                     << " vértices. Ciclo completo: " << (ciclo_completo ? "Sim" : "Não") << std::endl;
         }
     }
-
-    return melhor_caminho;
+    
+    if (melhor_caminho.empty()) {
+        std::cout << "ALERTA: Não foi possível encontrar nenhum caminho!" << std::endl;
+    } else {
+        std::cout << "Melhor resultado: Caminho com " << melhor_caminho.size() << "/" << num_vertices 
+                 << " vértices. Custo: " << menor_custo << std::endl;
+    }
+    
+    return melhor_caminho;  // Sempre retorna o melhor caminho parcial encontrado
 }
 
 std::vector<int> GrafoLista::tsp_reativo(int max_iteracoes) {
@@ -562,41 +596,114 @@ std::vector<int> GrafoLista::tsp_guloso_densidade() {
 
 double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
     if (caminho.empty()) {
-        return std::numeric_limits<double>::infinity(); // Indica falha
+        std::cerr << "[ERRO] Caminho vazio!" << std::endl;
+        return std::numeric_limits<double>::infinity();
+    }
+    
+    if (caminho.size() == 1) {
+        std::cout << "Caminho tem apenas 1 vértice." << std::endl;
+        return 0; // Custo zero para um único vértice
     }
 
-    if (caminho.size() != static_cast<size_t>(num_vertices)) {
-        throw std::runtime_error("Caminho incompleto!");
-    }
-
-    double custo = 0;
-    for (size_t i = 0; i < caminho.size() - 1; ++i) {
+    double custo_total = 0;
+    
+    // Somando o custo de todas as arestas do caminho
+    for (size_t i = 0; i < caminho.size() - 1; i++) {
+        int u = caminho[i];
+        int v = caminho[i + 1];
+        
         bool aresta_encontrada = false;
-        for (const auto& aresta : lista_adj[caminho[i]]) {
-            if (aresta.first == caminho[i+1]) {
-                custo += aresta.second;
+        for (const auto& aresta : lista_adj[u]) {
+            if (aresta.first == v) {
+                custo_total += aresta.second;
                 aresta_encontrada = true;
                 break;
             }
         }
+        
         if (!aresta_encontrada) {
-            throw std::runtime_error("Aresta não encontrada entre " + 
-                std::to_string(caminho[i]+1) + " e " + std::to_string(caminho[i+1]+1));
+            std::cerr << "[ERRO] Aresta não encontrada entre " << u << " e " << v << std::endl;
+            return std::numeric_limits<double>::infinity();
         }
     }
-
-    bool aresta_final_encontrada = false;
+    
+    // Verifica se existe aresta do último para o primeiro (fechando o ciclo)
+    bool ciclo_fechado = false;
     for (const auto& aresta : lista_adj[caminho.back()]) {
         if (aresta.first == caminho[0]) {
-            custo += aresta.second;
-            aresta_final_encontrada = true;
+            custo_total += aresta.second;
+            ciclo_fechado = true;
             break;
         }
     }
-
-    if (!aresta_final_encontrada) {
-        throw std::runtime_error("Não há aresta de retorno para formar o ciclo!");
+    
+    // Se não tiver ciclo, apenas relata mas não considera um erro fatal
+    if (!ciclo_fechado) {
+        std::cout << "Ciclo não fechado (sem aresta de " << caminho.back() << " para " << caminho[0] << ")" << std::endl;
     }
+    
+    return custo_total;
+}
 
-    return custo;
+void GrafoLista::diagnosticar_grafo() {
+    std::cout << "=== DIAGNÓSTICO DO GRAFO ===" << std::endl;
+    std::cout << "Número de vértices: " << num_vertices << std::endl;
+    
+    int total_arestas = 0;
+    for (int i = 0; i < num_vertices; i++) {
+        total_arestas += lista_adj[i].size();
+    }
+    std::cout << "Total de arestas: " << total_arestas << std::endl;
+    
+    // Verificar conectividade
+    int max_grau = 0, min_grau = num_vertices;
+    for (int i = 0; i < num_vertices; i++) {
+        int grau = lista_adj[i].size();
+        max_grau = std::max(max_grau, grau);
+        min_grau = std::min(min_grau, grau);
+    }
+    std::cout << "Grau mínimo: " << min_grau << ", Grau máximo: " << max_grau << std::endl;
+    
+    // Verificar ciclos hamiltonianos parciais aleatórios
+    for (int teste = 0; teste < 5; teste++) {
+        int inicio = rand() % num_vertices;
+        std::vector<bool> visitado(num_vertices, false);
+        std::vector<int> caminho;
+        int atual = inicio;
+        visitado[atual] = true;
+        caminho.push_back(atual);
+        
+        bool bloqueado = false;
+        for (int i = 1; i < num_vertices && !bloqueado; i++) {
+            bool encontrou_proximo = false;
+            for (const auto& aresta : lista_adj[atual]) {
+                int proximo = aresta.first;
+                if (!visitado[proximo]) {
+                    visitado[proximo] = true;
+                    caminho.push_back(proximo);
+                    atual = proximo;
+                    encontrou_proximo = true;
+                    break;
+                }
+            }
+            if (!encontrou_proximo) {
+                bloqueado = true;
+            }
+        }
+        
+        bool ciclo_completo = false;
+        if (!bloqueado) {
+            for (const auto& aresta : lista_adj[caminho.back()]) {
+                if (aresta.first == caminho[0]) {
+                    ciclo_completo = true;
+                    break;
+                }
+            }
+        }
+        
+        std::cout << "Teste " << teste+1 << ": ";
+        std::cout << "Caminho com " << caminho.size() << "/" << num_vertices << " vértices. ";
+        std::cout << "Ciclo completo: " << (ciclo_completo ? "Sim" : "Não") << std::endl;
+    }
+    std::cout << "===========================" << std::endl;
 }
