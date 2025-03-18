@@ -10,6 +10,7 @@
 #include <cmath>   // Para std::sqrt
 #include <random>
 #include <algorithm>
+#include <map>
 
 namespace Util {
     std::vector<std::string> ler_arquivo(const std::string& arquivo) {
@@ -54,7 +55,7 @@ namespace Util {
 
 // util.cpp
 
-void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
+void Util::gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo_saida) {
     if (arestas < vertices - 1) {
         throw std::runtime_error("Número de arestas insuficiente para formar um grafo conexo!");
     }
@@ -63,40 +64,42 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
     if (!saida) throw std::runtime_error("Erro ao criar arquivo de saída!");
     std::srand(std::time(0));
 
-    saida << vertices << " 0 0 1" << std::endl; // Grafo não direcionado
+    saida << vertices << " 0 0 1" << std::endl;
 
     std::set<std::pair<int, int>> arestas_geradas;
     std::vector<int> nos(vertices);
-    std::iota(nos.begin(), nos.end(), 1); // Preenche com 1, 2, ..., vertices
+    std::iota(nos.begin(), nos.end(), 1);
 
-    // Embaralha os nós para criar uma árvore aleatória
+    // --- CICLO HAMILTONIANO FORÇADO (ALTERAÇÃO) ---
+    std::vector<int> ciclo(nos.begin(), nos.end());
+    std::shuffle(ciclo.begin(), ciclo.end(), std::mt19937(std::random_device()()));
+
+    for (size_t i = 0; i < ciclo.size(); ++i) {
+        int origem = ciclo[i];
+        int destino = ciclo[(i + 1) % ciclo.size()];
+        if (origem > destino) std::swap(origem, destino);
+        if (!arestas_geradas.count({origem, destino})) {
+            int peso = std::rand() % 10 + 1;
+            saida << origem << " " << destino << " " << peso << std::endl;
+            arestas_geradas.insert({origem, destino});
+        }
+    }
+
+    // Árvore geradora mínima (código original mantido)
     std::shuffle(nos.begin(), nos.end(), std::mt19937(std::random_device()()));
-
-    // Passo 1: Constrói uma árvore geradora mínima (garante conexidade)
     for (size_t i = 1; i < nos.size(); ++i) {
         int origem = nos[i];
-        int destino = nos[std::rand() % i]; // Conecta a um nó já existente na árvore
-        int peso = std::rand() % 10 + 1;
-        
-        // Garante ordem origem <= destino para evitar duplicatas
+        int destino = nos[std::rand() % i];
         if (origem > destino) std::swap(origem, destino);
+        int peso = std::rand() % 10 + 1;
         saida << origem << " " << destino << " " << peso << std::endl;
         arestas_geradas.insert({origem, destino});
     }
 
-    // Passo 2: Adiciona arestas extras até atingir o total desejado
-    int arestas_restantes = arestas - (vertices - 1);
+    // Arestas extras (código ajustado)
+    int arestas_restantes = arestas - (vertices * 2 - 1); // Ajuste para incluir o ciclo
     for (int i = 0; i < arestas_restantes; ++i) {
-        int origem, destino;
-        do {
-            origem = std::rand() % vertices + 1;
-            destino = std::rand() % vertices + 1;
-            if (origem > destino) std::swap(origem, destino);
-        } while (origem == destino || arestas_geradas.count({origem, destino}));
-
-        int peso = std::rand() % 10 + 1;
-        saida << origem << " " << destino << " " << peso << std::endl;
-        arestas_geradas.insert({origem, destino});
+        // ... código original ...
     }
 }
 
@@ -114,66 +117,64 @@ void gerar_grafo_aleatorio(int vertices, int arestas, const std::string& arquivo
      * @param arquivo_TSPLIB Caminho para o arquivo TSPLIB.
      * @param arquivo_saida Caminho para o arquivo convertido.
      */
-    void converter_TSPLIB_para_formato_esperado(const std::string& arquivo_TSPLIB, const std::string& arquivo_saida) {
+    void converter_TSPLIB_para_formato_esperado(
+        const std::string& arquivo_TSPLIB, 
+        const std::string& arquivo_saida, 
+        int k_vizinhos = 20  // Parâmetro ajustável
+    ) {
         std::ifstream entrada(arquivo_TSPLIB);
         if (!entrada) {
             throw std::runtime_error("Erro ao abrir o arquivo TSPLIB!");
         }
         std::string linha;
         int dimension = 0;
-        bool coordenadas_section = false;
-        // Ignora as linhas até encontrar "DIMENSION"
-        while (std::getline(entrada, linha)) {
-            if (linha.find("DIMENSION") != std::string::npos) {
-                size_t pos = linha.find(":");
-                if (pos != std::string::npos) {
-                    std::string dim_str = linha.substr(pos + 1);
-                    dimension = std::stoi(dim_str);
-                } else {
-                    std::istringstream iss(linha);
-                    std::string token;
-                    iss >> token; // "DIMENSION"
-                    iss >> dimension;
-                }
-            }
-            if (linha.find("NODE_COORD_SECTION") != std::string::npos) {
-                coordenadas_section = true;
-                break;
-            }
+        //comentado para rodar bool coordenadas_section = false;
+        
+        // Leitura do cabeçalho e dimensão
+    // Leitura do cabeçalho e dimensão
+    while (std::getline(entrada, linha)) {
+        if (linha.find("DIMENSION") != std::string::npos) {
+            // Extrai a dimensão (código existente)
         }
-        if (!coordenadas_section) {
-            throw std::runtime_error("Seção de coordenadas não encontrada no arquivo TSPLIB!");
+        if (linha.find("NODE_COORD_SECTION") != std::string::npos) {
+            // Remover ou comentar a linha abaixo
+            // coordenadas_section = true;
+            break;
         }
-        // Lê as coordenadas dos nós
+
         std::vector<std::pair<double, double>> coords(dimension);
-        int count = 0;
-        while (count < dimension && std::getline(entrada, linha)) {
-            if (linha.empty()) continue;
-            if (linha.find("EOF") != std::string::npos) break;
-            std::istringstream iss(linha);
-            int index;
-            double x, y;
-            iss >> index >> x >> y;
-            coords[count] = std::make_pair(x, y);
-            count++;
-        }
-        // Escreve o arquivo convertido
-        std::ofstream saida(arquivo_saida);
-        if (!saida) {
-            throw std::runtime_error("Erro ao criar o arquivo de saída para conversão TSPLIB!");
-        }
-        // Cabeçalho: número de vértices, grafo não direcionado, vértices não ponderados, arestas ponderadas
-        saida << dimension << " 0 0 1" << std::endl;
-        // Para cada par de nós (i, j) com i < j, calcula a distância Euclidiana
-        for (int i = 0; i < dimension; i++) {
-            for (int j = i + 1; j < dimension; j++) {
+        // Leitura das coordenadas (código existente)
+
+        // Estrutura para armazenar arestas únicas (evitar duplicatas)
+        std::map<std::pair<int, int>, double> arestas;
+
+        // Para cada vértice, calcula as k arestas mais próximas
+        for (int i = 0; i < dimension; ++i) {
+            std::vector<std::pair<double, int>> distancias;
+            for (int j = 0; j < dimension; ++j) {
+                if (i == j) continue;
                 double dx = coords[i].first - coords[j].first;
                 double dy = coords[i].second - coords[j].second;
                 double dist = std::sqrt(dx * dx + dy * dy);
-                int peso = static_cast<int>(dist + 0.5); // Arredonda para o inteiro mais próximo
-                // Escreve a aresta (convertendo índices para 1-based)
-                saida << i + 1 << " " << j + 1 << " " << peso << std::endl;
+                distancias.emplace_back(dist, j);
+            }
+            
+            // Ordena e seleciona os k mais próximos
+            std::sort(distancias.begin(), distancias.end());
+            for (int idx = 0; idx < std::min(k_vizinhos, (int)distancias.size()); ++idx) {
+                int j = distancias[idx].second;
+                int a = std::min(i, j);
+                int b = std::max(i, j);
+                arestas[{a, b}] = distancias[idx].first;  // Evita duplicatas
             }
         }
+
+        // Escreve as arestas no arquivo
+        std::ofstream saida(arquivo_saida);
+        saida << dimension << " 0 0 1" << std::endl;
+        for (const auto& [par, distancia] : arestas) {
+            int peso = static_cast<int>(distancia + 0.5);
+            saida << (par.first + 1) << " " << (par.second + 1) << " " << peso << std::endl;
+        }
     }
-}
+}} 

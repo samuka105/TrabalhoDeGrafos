@@ -46,6 +46,7 @@
         "chrono": "cpp",
         "unordered_set": "cpp",
         "ratio": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "map": "cpp"
     }
 }

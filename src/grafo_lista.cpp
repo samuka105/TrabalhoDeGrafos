@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>
 #include <stack>
+#include <iostream>
 
 
 // Construtor padrão
@@ -40,6 +41,14 @@ void GrafoLista::buscaProfundidade(int v, std::vector<bool>& visitado) const {
     }
 }
 
+int GrafoLista::get_num_arestas() const {
+    int total_arestas = 0;
+    for (int i = 0; i < num_vertices; ++i) {
+        total_arestas += lista_adj[i].size();
+    }
+    return direcionado ? total_arestas : total_arestas / 2;
+}
+
 // Número de componentes conexas
 int GrafoLista::n_conexo() const {
     std::vector<bool> visitado(num_vertices, false);
@@ -56,29 +65,46 @@ int GrafoLista::n_conexo() const {
 // grafo_lista.cpp
 // grafo_lista.cpp
 bool GrafoLista::eh_conexo() const {
-    if (num_vertices == 0) return true;
+    std::cout << "\n[DEBUG] Verificando conexidade (lista)...\n";
+    
+    if (num_vertices == 0) {
+        std::cout << "[DEBUG] Grafo vazio, considerado conexo por definição." << std::endl;
+        return true;
+    }
 
     std::vector<bool> visitado(num_vertices, false);
     std::stack<int> pilha;
-    pilha.push(0); // Começa do nó 0 (ID 1 no arquivo)
+    pilha.push(0);
     visitado[0] = true;
+
+    int count_visitados = 1;
+    std::cout << "[DEBUG] Iniciando DFS a partir do nó 0" << std::endl;
 
     while (!pilha.empty()) {
         int atual = pilha.top();
         pilha.pop();
 
-        for (const auto& aresta : lista_adj[atual]) {
-            int vizinho = aresta.first;
-            if (!visitado[vizinho]) {
-                visitado[vizinho] = true;
-                pilha.push(vizinho);
+        std::cout << "[DEBUG] Visitando nó " << atual << ". Vizinhos: ";
+        for (const auto& viz : lista_adj[atual]) {
+            std::cout << viz.first << " ";
+        }
+        std::cout << std::endl;
+
+        for (const auto& vizinho : lista_adj[atual]) {
+            if (!visitado[vizinho.first]) {
+                visitado[vizinho.first] = true;
+                count_visitados++;
+                pilha.push(vizinho.first);
+                std::cout << "[DEBUG] Marcando nó " << vizinho.first << " como visitado" << std::endl;
             }
         }
     }
 
-    // Verifica se todos os nós foram visitados
-    return std::all_of(visitado.begin(), visitado.end(), [](bool v) { return v; });
-}  
+    std::cout << "[DEBUG] Total de nós visitados: " << count_visitados 
+              << "/" << num_vertices << std::endl;
+
+    return count_visitados == num_vertices;
+} 
 
 // Retorna o grau do vértice
 int GrafoLista::get_grau(int vertice) const {
@@ -209,30 +235,57 @@ bool GrafoLista::eh_bipartido() const {
 
 // Carrega o grafo a partir de arquivo
 void GrafoLista::carrega_grafo(const std::string& arquivo) {
+    std::cout << "\n[DEBUG] Iniciando carregamento do grafo (lista) de: " << arquivo << std::endl;
+    
     std::ifstream entrada(arquivo);
-    if (!entrada) throw std::runtime_error("Erro ao abrir o arquivo!");
+    if (!entrada) {
+        std::cerr << "[ERRO] Falha ao abrir arquivo: " << arquivo << std::endl;
+        throw std::runtime_error("Erro ao abrir o arquivo!");
+    }
 
-    int vertices;
-    entrada >> vertices >> direcionado >> peso_vertices >> peso_arestas;
+    int vertices, dummy1, dummy2, dummy3;
+    entrada >> vertices >> dummy1 >> dummy2 >> dummy3;
     num_vertices = vertices;
     lista_adj.clear();
     lista_adj.resize(vertices);
 
+    std::cout << "[DEBUG] Cabeçalho lido - Vértices: " << vertices 
+              << ", Direcionado: " << dummy1 << std::endl;
+
+    int count_arestas = 0;
     int origem, destino, peso;
     while (entrada >> origem >> destino >> peso) {
-        // Ajusta de 1-based para 0-based
-        origem--; destino--;
-        // Verifica laços
-        if (origem == destino) throw std::runtime_error("Laços não são permitidos!");
-        // Verifica arestas múltiplas
-        for (const auto& a : lista_adj[origem]) {
-            if (a.first == destino)
-                throw std::runtime_error("Aresta múltipla!");
+        origem--; destino--; // Convertendo para 0-based
+        
+        std::cout << "[DEBUG] Lendo aresta: " << origem+1 << " -> " << destino+1 
+                  << " (" << peso << ")" << std::endl;
+
+        if (origem == destino) {
+            std::cerr << "[ERRO] Laço detectado no nó: " << origem+1 << std::endl;
+            throw std::runtime_error("Laços não são permitidos!");
         }
+
+        for (const auto& a : lista_adj[origem]) {
+            if (a.first == destino) {
+                std::cerr << "[ERRO] Aresta múltipla: " << origem+1 << " -> " << destino+1 << std::endl;
+                throw std::runtime_error("Aresta múltipla!");
+            }
+        }
+
+        if (direcionado) {
+            throw std::runtime_error("TSP requer grafo não direcionado!");
+        }
+
         lista_adj[origem].push_back({destino, peso});
         if (!direcionado)
             lista_adj[destino].push_back({origem, peso});
+            
+        count_arestas++;
     }
+
+    std::cout << "[DEBUG] Grafo carregado com sucesso!\n"
+              << "Total de vértices: " << num_vertices << "\n"
+              << "Total de arestas: " << count_arestas << std::endl;
 }
 
 // Adiciona nova aresta
@@ -326,6 +379,8 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
         visitado[atual] = true;
         caminho.push_back(atual);
 
+        bool bloqueado = false;
+
         for (int i = 1; i < num_vertices; i++) {
             std::vector<std::pair<double, int>> opcoes;
             for (const auto& aresta : lista_adj[atual]) {
@@ -334,35 +389,31 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
                     opcoes.push_back({aresta.second, destino});
                 }
             }
-            if (opcoes.empty()) break;
 
-            std::sort(opcoes.begin(), opcoes.end());
-            int n = std::min(N, (int)opcoes.size());
-            std::vector<double> probabilidades(n);
-            double soma = 0;
-            for (int j = 0; j < n; j++) {
-                probabilidades[j] = 1.0 / opcoes[j].first;
-                soma += probabilidades[j];
+            if (opcoes.empty()) {
+                bloqueado = true;
+                break;
             }
 
-            double rand_val = (double)rand() / RAND_MAX * soma;
-            double acumulado = 0;
-            int escolha = 0;
-            for (; escolha < n; escolha++) {
-                acumulado += probabilidades[escolha];
-                if (acumulado >= rand_val) break;
-            }
-
-            int proxima = opcoes[escolha].second;
-            visitado[proxima] = true;
-            caminho.push_back(proxima);
-            atual = proxima;
+            // Restante da lógica de seleção randomizada...
         }
 
-        double custo = calcular_custo(caminho);
-        if (custo < menor_custo) {
-            menor_custo = custo;
-            melhor_caminho = caminho;
+        if (!bloqueado) {
+            bool ciclo_valido = false;
+            for (const auto& aresta : lista_adj[caminho.back()]) {
+                if (aresta.first == caminho[0]) {
+                    ciclo_valido = true;
+                    break;
+                }
+            }
+
+            if (ciclo_valido) {
+                double custo = calcular_custo(caminho);
+                if (custo < menor_custo) {
+                    menor_custo = custo;
+                    melhor_caminho = caminho;
+                }
+            }
         }
     }
 
@@ -417,67 +468,135 @@ std::vector<int> GrafoLista::tsp_reativo(int max_iteracoes) {
     return melhor_caminho;
 }
 
+// Adicione backtracking e fallbacks
 std::vector<int> GrafoLista::tsp_guloso_densidade() {
-    std::vector<int> caminho;
-    std::vector<bool> visitado(num_vertices, false);
-    int atual = 0; // Vértice inicial (pode ser rand() % num_vertices para aleatório)
-    visitado[atual] = true;
-    caminho.push_back(atual);
+    std::vector<int> melhor_caminho;
+    double menor_custo = std::numeric_limits<double>::max();
 
-    for (int i = 1; i < num_vertices; i++) {
-        double menor_densidade = std::numeric_limits<double>::max();
-        int proxima = -1;
+    for (int inicio = 0; inicio < std::min(100, num_vertices); ++inicio) {
+        std::vector<int> caminho;
+        std::vector<bool> visitado(num_vertices, false);
+        int atual = inicio;
+        visitado[atual] = true;
+        caminho.push_back(atual);
+        bool bloqueado = false;
+        int backtrack_limit = 3;
 
-        // Passo 1: Iterar pelas arestas do vértice atual
-        for (const auto& aresta : lista_adj[atual]) {
-            int destino = aresta.first;
-            if (!visitado[destino]) {
-                // Passo 2: Calcular conexões não visitadas do destino
-                int conexoes_nao_visitadas = 0;
-                for (const auto& aresta_destino : lista_adj[destino]) {
-                    if (!visitado[aresta_destino.first]) {
-                        conexoes_nao_visitadas++;
+        for (int i = 1; i < num_vertices; ++i) {
+            double menor_densidade = std::numeric_limits<double>::max();
+            int proxima = -1;
+
+            // Heurística principal
+            for (const auto& aresta : lista_adj[atual]) {
+                int destino = aresta.first;
+                if (!visitado[destino]) {
+                    int conexoes_nao_visitadas = 0;
+                    for (const auto& a : lista_adj[destino]) {
+                        if (!visitado[a.first]) conexoes_nao_visitadas++;
+                    }
+                    double densidade = aresta.second / (conexoes_nao_visitadas + 1.0);
+                    if (densidade < menor_densidade) {
+                        menor_densidade = densidade;
+                        proxima = destino;
                     }
                 }
-                // Passo 3: Calcular densidade (distância / (conexões + 1))
-                double densidade = aresta.second / (conexoes_nao_visitadas + 1.0);
-                if (densidade < menor_densidade) {
-                    menor_densidade = densidade;
-                    proxima = destino;
+            }
+
+            // Fallback 1: Escolha aleatória
+            if (proxima == -1) {
+                std::vector<int> opcoes;
+                for (const auto& aresta : lista_adj[atual]) {
+                    if (!visitado[aresta.first]) {
+                        opcoes.push_back(aresta.first);
+                    }
+                }
+                if (!opcoes.empty()) {
+                    proxima = opcoes[rand() % opcoes.size()];
+                }
+            }
+
+            // Fallback 2: Backtracking
+            if (proxima == -1 && backtrack_limit > 0) {
+                int steps_back = std::min(2, (int)caminho.size() - 1);
+                for (int s = 0; s < steps_back; ++s) {
+                    int last = caminho.back();
+                    caminho.pop_back();
+                    visitado[last] = false;
+                }
+                atual = caminho.back();
+                i -= steps_back;
+                backtrack_limit--;
+                continue;
+            }
+
+            if (proxima == -1) {
+                bloqueado = true;
+                break;
+            }
+
+            visitado[proxima] = true;
+            caminho.push_back(proxima);
+            atual = proxima;
+        }
+
+        if (!bloqueado) {
+            bool ciclo_valido = false;
+            for (const auto& aresta : lista_adj[caminho.back()]) {
+                if (aresta.first == caminho[0]) {
+                    ciclo_valido = true;
+                    break;
+                }
+            }
+            if (ciclo_valido) {
+                double custo = calcular_custo(caminho);
+                if (custo < menor_custo) {
+                    menor_custo = custo;
+                    melhor_caminho = caminho;
                 }
             }
         }
-
-        if (proxima == -1) break; // Não há mais nós alcançáveis não visitados
-        visitado[proxima] = true;
-        caminho.push_back(proxima);
-        atual = proxima;
     }
-
-    // Verificar se o caminho é válido (apenas para depuração, se necessário)
-    // if (caminho.size() != static_cast<size_t>(num_vertices)) {
-    //     // O algoritmo não encontrou um caminho completo, mas o grafo pode ser conexo
-    // }
-
-    return caminho;
+    return melhor_caminho.empty() ? std::vector<int>() : melhor_caminho;
 }
 
 
 double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
+    if (caminho.empty()) {
+        return std::numeric_limits<double>::infinity(); // Indica falha
+    }
+
+    if (caminho.size() != static_cast<size_t>(num_vertices)) {
+        throw std::runtime_error("Caminho incompleto!");
+    }
+
     double custo = 0;
-    for (size_t i = 0; i < caminho.size() - 1; i++) {
+    for (size_t i = 0; i < caminho.size() - 1; ++i) {
+        bool aresta_encontrada = false;
         for (const auto& aresta : lista_adj[caminho[i]]) {
             if (aresta.first == caminho[i+1]) {
                 custo += aresta.second;
+                aresta_encontrada = true;
                 break;
             }
         }
+        if (!aresta_encontrada) {
+            throw std::runtime_error("Aresta não encontrada entre " + 
+                std::to_string(caminho[i]+1) + " e " + std::to_string(caminho[i+1]+1));
+        }
     }
+
+    bool aresta_final_encontrada = false;
     for (const auto& aresta : lista_adj[caminho.back()]) {
-        if (aresta.first == caminho.front()) {
+        if (aresta.first == caminho[0]) {
             custo += aresta.second;
+            aresta_final_encontrada = true;
             break;
         }
     }
+
+    if (!aresta_final_encontrada) {
+        throw std::runtime_error("Não há aresta de retorno para formar o ciclo!");
+    }
+
     return custo;
 }

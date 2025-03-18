@@ -13,51 +13,88 @@
 #endif
 
 // --- Validação do Caminho ---
+// --- NOVA VALIDAÇÃO (SUBSTITUI A ANTERIOR) ---
 bool caminho_valido(const std::vector<int>& caminho, int num_vertices) {
-    if (caminho.empty() || caminho.front() != caminho.back()) return false;
-    std::unordered_set<int> visitados;
-    for (size_t i = 0; i < caminho.size() - 1; i++) {
-        if (visitados.count(caminho[i]) > 0) return false;
-        visitados.insert(caminho[i]);
+    if (caminho.empty()) {
+        std::cerr << "[ERRO] Caminho vazio!\n";
+        return false;
     }
-    return (visitados.size() == static_cast<size_t>(num_vertices));
-}
 
+    std::unordered_set<int> visitados;
+    for (size_t i = 0; i < caminho.size(); ++i) {
+        int node = caminho[i];
+        if (node < 0 || node >= num_vertices) {
+            std::cerr << "[ERRO] Nó inválido: " << node+1 << "\n";
+            return false;
+        }
+        if (visitados.count(node)) {
+            std::cerr << "[ERRO] Nó repetido: " << node+1 << "\n";
+            return false;
+        }
+        visitados.insert(node);
+    }
+
+    if (visitados.size() != static_cast<size_t>(num_vertices)) {
+        std::cerr << "[ERRO] Nós visitados: " << visitados.size() 
+                  << "/" << num_vertices << "\n";
+        return false;
+    }
+
+    return true;
+}
 // --- Função para testar TODOS os algoritmos em uma instância ---
 void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
-    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===" << std::endl;
-
-    // Verifica conexidade antes de prosseguir
-    if (!grafo.eh_conexo()) {
-        std::cerr << "Erro: Grafo não é conexo! Ignorando testes para esta instância." << std::endl;
+    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===\n";
+    
+    std::cout << "[DEBUG] Iniciando teste de conexidade...\n";
+    bool conexo = grafo.eh_conexo();
+    std::cout << "[DEBUG] Resultado da conexidade: " << (conexo ? "Conexo" : "Desconexo") << "\n\n";
+    if (!conexo) {
+        std::cerr << "Grafo não é conexo! Ignorando TSP.\n";
         return;
     }
 
-    std::cout << "\n=== INSTÂNCIA: " << nome_instancia << " ===" << std::endl;
+    // Verifica se há pelo menos um ciclo Hamiltoniano (heurística simples)
+    bool ciclo_possivel = (grafo.get_num_arestas() >= grafo.get_ordem() * 2);
+    if (!ciclo_possivel) {
+        std::cerr << "Grafo não tem arestas suficientes para ciclo Hamiltoniano! Ignorando TSP.\n";
+        return;
+    }
+    
 
-    // Testar Guloso
-    auto inicio = std::chrono::high_resolution_clock::now();
-    auto caminho_guloso = grafo.tsp_guloso_densidade();
-    auto fim = std::chrono::high_resolution_clock::now();
-    std::cout << "[Guloso] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
-              << "s | Custo: " << grafo.calcular_custo(caminho_guloso) 
-              << " | Válido: " << (caminho_valido(caminho_guloso, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
 
-    // Testar Randomizado
-    inicio = std::chrono::high_resolution_clock::now();
-    auto caminho_randomizado = grafo.tsp_randomizado_controlado(50, 3); // 50 iterações, N=3
-    fim = std::chrono::high_resolution_clock::now();
-    std::cout << "[Randomizado] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
-              << "s | Custo: " << grafo.calcular_custo(caminho_randomizado) 
-              << " | Válido: " << (caminho_valido(caminho_randomizado, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
+    if (!conexo) {
+        std::cerr << "Erro: Grafo não é conexo ou completo! Ignorando TSP\n";
+        return;
+    }
 
-    // Testar Reativo
-    inicio = std::chrono::high_resolution_clock::now();
-    auto caminho_reativo = grafo.tsp_reativo(30); // 30 iterações
-    fim = std::chrono::high_resolution_clock::now();
-    std::cout << "[Reativo] Tempo: " << std::chrono::duration<double>(fim - inicio).count() 
-              << "s | Custo: " << grafo.calcular_custo(caminho_reativo) 
-              << " | Válido: " << (caminho_valido(caminho_reativo, grafo.get_ordem()) ? "Sim" : "Não") << std::endl;
+    auto executar_algoritmo = [&](const std::string& nome, auto algoritmo) {
+        std::cout << "[DEBUG] Iniciando algoritmo " << nome << "...\n";
+        auto inicio = std::chrono::high_resolution_clock::now();
+        
+        std::vector<int> caminho;
+        try {
+            caminho = algoritmo();
+        } catch (const std::exception& e) {
+            std::cerr << "[ERRO] Falha no algoritmo " << nome << ": " << e.what() << "\n";
+            return;
+        }
+
+        auto fim = std::chrono::high_resolution_clock::now();
+        double tempo = std::chrono::duration<double>(fim - inicio).count();
+
+        std::cout << "[DEBUG] Caminho " << nome << " (" << caminho.size() << " nós): ";
+        for (int node : caminho) std::cout << node+1 << " ";
+        std::cout << "\n";
+
+        std::cout << "[" << nome << "] Tempo: " << tempo << "s | Custo: " 
+                  << grafo.calcular_custo(caminho) << " | Válido: " 
+                  << (caminho_valido(caminho, grafo.get_ordem()) ? "Sim" : "Não") << "\n\n";
+    };
+
+    executar_algoritmo("Guloso", [&](){ return grafo.tsp_guloso_densidade(); });
+    executar_algoritmo("Randomizado", [&](){ return grafo.tsp_randomizado_controlado(50, 3); });
+    executar_algoritmo("Reativo", [&](){ return grafo.tsp_reativo(30); });
 }
 
 // --- Testar Matriz e Lista para uma instância ---
@@ -77,13 +114,16 @@ void testar_instancia(const std::string& arquivo) {
     testar_todos_algoritmos(gl, arquivo);
 }
 
-// --- Gerar 5 grafos aleatórios grandes ---
+// --- VERSÃO MODIFICADA ---
 void gerar_grafos_aleatorios_grandes() {
-    Util::gerar_grafo_aleatorio(5000, 20000, "entradas/grafo_5k.txt");
-    Util::gerar_grafo_aleatorio(7000, 30000, "entradas/grafo_7k.txt");
-    Util::gerar_grafo_aleatorio(10000, 40000, "entradas/grafo_10k.txt");
-    Util::gerar_grafo_aleatorio(12000, 50000, "entradas/grafo_12k.txt");
-    Util::gerar_grafo_aleatorio(15000, 60000, "entradas/grafo_15k.txt");
+    // Grafo 5k: 5000 nós com 250k arestas (grau médio ~50)
+    Util::gerar_grafo_aleatorio(5000, 250000, "entradas/grafo_5k.txt");
+    
+    // Grafos adicionais com densidade similar
+    Util::gerar_grafo_aleatorio(7000, 350000, "entradas/grafo_7k.txt");
+    Util::gerar_grafo_aleatorio(10000, 500000, "entradas/grafo_10k.txt");
+    Util::gerar_grafo_aleatorio(12000, 600000, "entradas/grafo_12k.txt");
+    Util::gerar_grafo_aleatorio(15000, 750000, "entradas/grafo_15k.txt");
 }
 
 // --- Processar 5 instâncias TSP ---

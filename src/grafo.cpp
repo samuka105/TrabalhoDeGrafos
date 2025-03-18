@@ -7,6 +7,7 @@ int Grafo::get_ordem() const {
     return this->num_vertices;
 }
 
+
 bool Grafo::eh_direcionado() const {
     return this->direcionado;
 }

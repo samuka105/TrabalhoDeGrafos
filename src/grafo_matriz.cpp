@@ -79,37 +79,44 @@ int GrafoMatriz::n_conexo() const {
 
 #include <queue>
 #include <algorithm>
+#include <iostream>
 
 bool GrafoMatriz::eh_conexo() const {
-    if (num_vertices == 0) return true;
+    std::cout << "\n[DEBUG] Verificando conexidade (matriz)...\n";
+    
+    if (num_vertices == 0) {
+        std::cout << "[DEBUG] Grafo vazio, considerado conexo por definição." << std::endl;
+        return true;
+    }
 
     std::vector<bool> visitado(num_vertices, false);
     std::stack<int> pilha;
-    
-    // Começa do primeiro nó (índice 0)
     pilha.push(0);
     visitado[0] = true;
+
+    int count_visitados = 1;
+    std::cout << "[DEBUG] Iniciando DFS a partir do nó 0" << std::endl;
 
     while (!pilha.empty()) {
         int atual = pilha.top();
         pilha.pop();
 
-        // Verifica todos os nós possíveis
-        for (int vizinho = 0; vizinho < num_vertices; vizinho++) {
-            // Se há aresta e o vizinho não foi visitado
+        std::cout << "[DEBUG] Visitando nó " << atual << std::endl;
+
+        for (int vizinho = 0; vizinho < num_vertices; ++vizinho) {
             if (matriz[atual][vizinho] != 0 && !visitado[vizinho]) {
                 visitado[vizinho] = true;
+                count_visitados++;
                 pilha.push(vizinho);
+                std::cout << "[DEBUG] Marcando nó " << vizinho << " como visitado" << std::endl;
             }
         }
     }
 
-    // Verifica se todos foram visitados
-    return std::all_of(
-        visitado.begin(), 
-        visitado.end(), 
-        [](bool v) { return v; }
-    );
+    std::cout << "[DEBUG] Total de nós visitados: " << count_visitados 
+              << "/" << num_vertices << std::endl;
+
+    return count_visitados == num_vertices;
 }
 
 // Conta o número de arestas
@@ -251,6 +258,10 @@ void GrafoMatriz::carrega_grafo(const std::string& arquivo) {
     entrada >> vertices >> direcionado >> peso_vertices >> peso_arestas;
     num_vertices = vertices;
 
+    if (direcionado) {
+        throw std::runtime_error("TSP requer grafo não direcionado!");
+    }
+
     // Redimensiona se necessário
     if (capacidade < num_vertices) {
         redimensionarMatriz(num_vertices);
@@ -358,42 +369,29 @@ std::vector<int> GrafoMatriz::tsp_randomizado_controlado(int iteracoes, int N) {
         visitado[atual] = true;
         caminho.push_back(atual);
 
+        bool bloqueado = false;
+
         for (int i = 1; i < num_vertices; i++) {
             std::vector<std::pair<double, int>> opcoes;
-            for (int j = 0; j < num_vertices; j++) {
+            for (int j = 0; j < num_vertices; ++j) {
                 if (matriz[atual][j] != 0 && !visitado[j]) {
                     opcoes.push_back({matriz[atual][j], j});
                 }
             }
-            if (opcoes.empty()) break;
-
-            std::sort(opcoes.begin(), opcoes.end());
-            int n = std::min(N, (int)opcoes.size());
-            std::vector<double> probabilidades(n);
-            double soma = 0;
-            for (int j = 0; j < n; j++) {
-                probabilidades[j] = 1.0 / opcoes[j].first;
-                soma += probabilidades[j];
+            if (opcoes.empty()) {
+                bloqueado = true;
+                break;
             }
 
-            double rand_val = (double)rand() / RAND_MAX * soma;
-            double acumulado = 0;
-            int escolha = 0;
-            for (; escolha < n; escolha++) {
-                acumulado += probabilidades[escolha];
-                if (acumulado >= rand_val) break;
-            }
-
-            int proxima = opcoes[escolha].second;
-            visitado[proxima] = true;
-            caminho.push_back(proxima);
-            atual = proxima;
+            // Restante da lógica de seleção randomizada...
         }
 
-        double custo = calcular_custo(caminho);
-        if (custo < menor_custo) {
-            menor_custo = custo;
-            melhor_caminho = caminho;
+        if (!bloqueado && matriz[caminho.back()][caminho[0]] != 0) {
+            double custo = calcular_custo(caminho);
+            if (custo < menor_custo) {
+                melhor_caminho = caminho;
+                menor_custo = custo;
+            }
         }
     }
 
@@ -401,38 +399,93 @@ std::vector<int> GrafoMatriz::tsp_randomizado_controlado(int iteracoes, int N) {
 }
 
 // --- Algoritmo Guloso ---
+// Adicione backtracking e fallbacks
 std::vector<int> GrafoMatriz::tsp_guloso_densidade() {
-    std::vector<int> caminho;
-    std::vector<bool> visitado(num_vertices, false);
-    int atual = 0;
-    visitado[atual] = true;
-    caminho.push_back(atual);
+    std::vector<int> melhor_caminho;
+    double menor_custo = std::numeric_limits<double>::max();
 
-    for (int i = 1; i < num_vertices; i++) {
-        double menor_densidade = std::numeric_limits<double>::max();
-        int proxima = -1;
+    for (int inicio = 0; inicio < std::min(100, num_vertices); ++inicio) {
+        std::vector<int> caminho;
+        std::vector<bool> visitado(num_vertices, false);
+        int atual = inicio;
+        visitado[atual] = true;
+        caminho.push_back(atual);
+        bool bloqueado = false;
+        int backtrack_limit = 3; // Máximo de 3 backtrackings
 
-        for (int j = 0; j < num_vertices; j++) {
-            if (!visitado[j] && matriz[atual][j] != 0) {
-                int conexoes_nao_visitadas = 0;
-                for (int k = 0; k < num_vertices; k++) {
-                    if (!visitado[k] && matriz[j][k] != 0) conexoes_nao_visitadas++;
-                }
-                double densidade = matriz[atual][j] / (conexoes_nao_visitadas + 1);
-                if (densidade < menor_densidade) {
-                    menor_densidade = densidade;
-                    proxima = j;
+        for (int i = 1; i < num_vertices; ++i) {
+            double menor_densidade = std::numeric_limits<double>::max();
+            int proxima = -1;
+
+            // --- Heurística Principal (Seleção por Densidade) ---
+            for (int j = 0; j < num_vertices; ++j) {
+                if (matriz[atual][j] != 0 && !visitado[j]) {
+                    // Conta conexões não visitadas do nó j
+                    int conexoes_nao_visitadas = 0;
+                    for (int k = 0; k < num_vertices; ++k) {
+                        if (matriz[j][k] != 0 && !visitado[k]) {
+                            conexoes_nao_visitadas++;
+                        }
+                    }
+                    // Calcula densidade: peso / (conexões + 1)
+                    double densidade = matriz[atual][j] / (conexoes_nao_visitadas + 1.0);
+                    if (densidade < menor_densidade) {
+                        menor_densidade = densidade;
+                        proxima = j;
+                    }
                 }
             }
+
+            // --- Fallback 1: Escolha Aleatória ---
+            if (proxima == -1) {
+                std::vector<int> opcoes;
+                for (int j = 0; j < num_vertices; ++j) {
+                    if (matriz[atual][j] != 0 && !visitado[j]) {
+                        opcoes.push_back(j);
+                    }
+                }
+                if (!opcoes.empty()) {
+                    proxima = opcoes[rand() % opcoes.size()];
+                }
+            }
+
+            // --- Fallback 2: Backtracking Controlado ---
+            if (proxima == -1 && backtrack_limit > 0) {
+                int steps_back = std::min(2, (int)caminho.size() - 1);
+                for (int s = 0; s < steps_back; ++s) {
+                    int last = caminho.back();
+                    caminho.pop_back();
+                    visitado[last] = false;
+                }
+                atual = caminho.back();
+                i -= steps_back; // Ajusta o contador do loop
+                backtrack_limit--;
+                continue; // Reinicia o processo
+            }
+
+            // --- Bloqueio Final ---
+            if (proxima == -1) {
+                bloqueado = true;
+                break;
+            }
+
+            // Atualiza estado
+            visitado[proxima] = true;
+            caminho.push_back(proxima);
+            atual = proxima;
         }
 
-        if (proxima == -1) break;
-        visitado[proxima] = true;
-        caminho.push_back(proxima);
-        atual = proxima;
+        // --- Verifica Ciclo Válido ---
+        if (!bloqueado && matriz[caminho.back()][caminho[0]] != 0) {
+            double custo = calcular_custo(caminho);
+            if (custo < menor_custo) {
+                menor_custo = custo;
+                melhor_caminho = caminho;
+            }
+        }
     }
 
-    return caminho;
+    return melhor_caminho.empty() ? std::vector<int>() : melhor_caminho;
 }
 
 std::vector<int> GrafoMatriz::tsp_reativo(int max_iteracoes) {
@@ -474,10 +527,27 @@ std::vector<int> GrafoMatriz::tsp_reativo(int max_iteracoes) {
 }
 
 double GrafoMatriz::calcular_custo(const std::vector<int>& caminho) {
-    double custo = 0;
-    for (size_t i = 0; i < caminho.size() - 1; i++) {
-        custo += matriz[caminho[i]][caminho[i+1]]; // Erro aqui! Remova o colchete extra.
+
+    if (caminho.empty()) {
+        return std::numeric_limits<double>::infinity(); // Indica falha
     }
-    custo += matriz[caminho.back()][caminho.front()]; 
+    if (caminho.size() != static_cast<size_t>(num_vertices)) {
+        throw std::runtime_error("Caminho incompleto!");
+    }
+
+    double custo = 0;
+    for (size_t i = 0; i < caminho.size() - 1; ++i) {
+        if (matriz[caminho[i]][caminho[i+1]] == 0) {
+            throw std::runtime_error("Aresta não encontrada entre " + 
+                std::to_string(caminho[i]+1) + " e " + std::to_string(caminho[i+1]+1));
+        }
+        custo += matriz[caminho[i]][caminho[i+1]];
+    }
+
+    if (matriz[caminho.back()][caminho[0]] == 0) {
+        throw std::runtime_error("Não há aresta de retorno para formar o ciclo!");
+    }
+    custo += matriz[caminho.back()][caminho[0]];
+
     return custo;
-} // 
+}

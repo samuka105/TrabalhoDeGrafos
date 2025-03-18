@@ -32,6 +32,7 @@ public:
     void deleta_no(int id) override;
     void deleta_aresta(int origem, int destino) override;
     double menor_distancia(int origem, int destino) const override;
+    int get_num_arestas() const override;
  
     // Métodos TSP
     std::vector<int> tsp_guloso_densidade() override;
