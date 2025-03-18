@@ -243,13 +243,18 @@ bool GrafoMatriz::eh_bipartido() const {
 }
 
 // Carrega grafo a partir de arquivo
+// Em grafo_matriz.cpp (método carrega_grafo)
 void GrafoMatriz::carrega_grafo(const std::string& arquivo) {
     std::ifstream entrada(arquivo);
     if (!entrada) throw std::runtime_error("Erro ao abrir o arquivo: " + arquivo);
 
     int vertices;
     entrada >> vertices >> direcionado >> peso_vertices >> peso_arestas;
-    num_vertices = vertices;
+
+    // Verifica se o grafo é grande demais para matrizes
+    if (vertices > 10000) { // Ajuste o limite conforme necessário
+        throw std::runtime_error("Grafo muito grande para estrutura de matriz.");
+    }
 
     // Redimensiona se necessário
     if (capacidade < num_vertices) {

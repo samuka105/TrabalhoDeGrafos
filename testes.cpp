@@ -63,20 +63,27 @@ void testar_todos_algoritmos(Grafo& grafo, const std::string& nome_instancia) {
 }
 
 // --- Testar Matriz e Lista para uma instância ---
+// --- Testar Matriz e Lista para uma instância ---
 void testar_instancia(const std::string& arquivo) {
-    // Testar com Matriz (apenas para grafos pequenos)
-    if (arquivo.find("grafo_") == std::string::npos) { // Ajuste conforme necessário
+    // Testar com Matriz 
+    try {
         GrafoMatriz gm;
         gm.carrega_grafo(arquivo);
         std::cout << "\n[ESTRUTURA: MATRIZ]";
         testar_todos_algoritmos(gm, arquivo);
+    } catch (const std::exception& e) {
+        std::cerr << "\n[ERRO MATRIZ] " << arquivo << ": " << e.what() << std::endl;
     }
 
-    // Sempre testar com Lista
-    GrafoLista gl;
-    gl.carrega_grafo(arquivo);
-    std::cout << "\n[ESTRUTURA: LISTA]";
-    testar_todos_algoritmos(gl, arquivo);
+    // Testar com Lista
+    try {
+        GrafoLista gl;
+        gl.carrega_grafo(arquivo);
+        std::cout << "\n[ESTRUTURA: LISTA]";
+        testar_todos_algoritmos(gl, arquivo);
+    } catch (const std::exception& e) {
+        std::cerr << "\n[ERRO LISTA] " << arquivo << ": " << e.what() << std::endl;
+    }
 }
 
 // --- Gerar 5 grafos aleatórios grandes ---
