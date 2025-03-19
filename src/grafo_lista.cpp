@@ -8,28 +8,27 @@
 #include <numeric>
 #include <stack>
 
-
-// Construtor padrão
+// Construtor padrão: inicializa um grafo vazio
 GrafoLista::GrafoLista() : Grafo(0, false, false, false) {
-    lista_adj.resize(0); // Lista vazia
+    lista_adj.resize(0); // Lista de adjacência vazia
 }
 
-// Construtor
+// Construtor: inicializa um grafo com o número de vértices e propriedades especificadas
 GrafoLista::GrafoLista(int vertices, bool eh_direcionado, bool ponderado_vertices, bool ponderado_arestas)
     : Grafo(vertices, eh_direcionado, ponderado_vertices, ponderado_arestas) {
     lista_adj.resize(vertices);
 }
 
-// Destrutor
+// Destrutor: realiza a limpeza de recursos, se necessário (nada a fazer aqui)
 GrafoLista::~GrafoLista() {}
 
-// Novo nó
+// Adiciona um novo nó ao grafo, aumentando o número total de vértices
 void GrafoLista::novo_no() {
     lista_adj.push_back({});
     num_vertices++;
 }
 
-// Busca em profundidade
+// Realiza uma busca em profundidade (DFS) a partir do vértice 'v', marcando vértices visitados
 void GrafoLista::buscaProfundidade(int v, std::vector<bool>& visitado) const {
     visitado[v] = true;
     for (const auto& vizinho : lista_adj[v]) {
@@ -40,7 +39,7 @@ void GrafoLista::buscaProfundidade(int v, std::vector<bool>& visitado) const {
     }
 }
 
-// Número de componentes conexas
+// Retorna o número de componentes conexas no grafo
 int GrafoLista::n_conexo() const {
     std::vector<bool> visitado(num_vertices, false);
     int componentes = 0;
@@ -53,8 +52,7 @@ int GrafoLista::n_conexo() const {
     return componentes;
 }
 
-// grafo_lista.cpp
-// grafo_lista.cpp
+// Verifica se o grafo é conexo (todos os vértices são alcançáveis de qualquer outro)
 bool GrafoLista::eh_conexo() const {
     if (num_vertices == 0) return true;
 
@@ -80,7 +78,7 @@ bool GrafoLista::eh_conexo() const {
     return std::all_of(visitado.begin(), visitado.end(), [](bool v) { return v; });
 }  
 
-// Retorna o grau do vértice
+// Retorna o grau (número de arestas) do vértice especificado
 int GrafoLista::get_grau(int vertice) const {
     if (vertice < 0 || vertice >= num_vertices) {
         throw std::out_of_range("Vértice inválido!");
@@ -88,7 +86,7 @@ int GrafoLista::get_grau(int vertice) const {
     return lista_adj[vertice].size();
 }
 
-// Verifica se o grafo é completo
+// Verifica se o grafo é completo (todos os vértices estão conectados entre si)
 bool GrafoLista::eh_completo() const {
     for (int i = 0; i < num_vertices; ++i) {
         if (lista_adj[i].size() != static_cast<std::size_t>(num_vertices - 1)) {
@@ -98,7 +96,7 @@ bool GrafoLista::eh_completo() const {
     return true;
 }
 
-// Verifica se o grafo é uma árvore
+// Verifica se o grafo é uma árvore (conexo e tem n-1 arestas)
 bool GrafoLista::eh_arvore() const {
     // Para ser árvore: conexo e número de arestas igual a (n - 1)
     int total_arestas = 0;
@@ -109,7 +107,7 @@ bool GrafoLista::eh_arvore() const {
     return (n_conexo() == 1 && total_arestas == num_vertices - 1);
 }
 
-// Verifica existência de vértices de articulação
+// Verifica existência de vértices de articulação no grafo
 bool GrafoLista::possui_articulacao() const {
     std::vector<bool> visitado(num_vertices, false);
     std::vector<int> discovery_time(num_vertices, -1);
@@ -146,7 +144,7 @@ bool GrafoLista::possui_articulacao() const {
     return possui;
 }
 
-// Verifica existência de arestas ponte
+// Verifica existência de arestas ponte no grafo
 bool GrafoLista::possui_ponte() const {
     std::vector<bool> visitado(num_vertices, false);
     std::vector<int> discovery_time(num_vertices, -1);
@@ -181,7 +179,7 @@ bool GrafoLista::possui_ponte() const {
     return possui;
 }
 
-// Verifica se o grafo é bipartido
+// Verifica se o grafo é bipartido (pode ser colorido com 2 cores sem conflitos)
 bool GrafoLista::eh_bipartido() const {
     std::vector<int> cor(num_vertices, -1);
     for (int i = 0; i < num_vertices; ++i) {
@@ -207,7 +205,7 @@ bool GrafoLista::eh_bipartido() const {
     return true;
 }
 
-// Carrega o grafo a partir de arquivo
+// Carrega o grafo a partir de um arquivo, construindo a lista de adjacência
 void GrafoLista::carrega_grafo(const std::string& arquivo) {
     std::ifstream entrada(arquivo);
     if (!entrada) throw std::runtime_error("Erro ao abrir o arquivo: " + arquivo);
@@ -235,7 +233,7 @@ void GrafoLista::carrega_grafo(const std::string& arquivo) {
     }
 }
 
-// Adiciona nova aresta
+// Adiciona uma nova aresta ao grafo, verificando condições de validade
 void GrafoLista::nova_aresta(int origem, int destino, int peso) {
     if (origem < 0 || origem >= num_vertices || destino < 0 || destino >= num_vertices)
         throw std::out_of_range("Vértices fora do intervalo!");
@@ -249,7 +247,7 @@ void GrafoLista::nova_aresta(int origem, int destino, int peso) {
         lista_adj[destino].push_back({origem, peso});
 }
 
-// Remove nó (deleta vértice) e ajusta IDs
+// Remove um nó específico do grafo e ajusta os IDs dos vértices restantes
 void GrafoLista::deleta_no(int id) {
     if (id < 0 || id >= num_vertices)
         throw std::out_of_range("ID do nó inválido!");
@@ -269,7 +267,7 @@ void GrafoLista::deleta_no(int id) {
     }
 }
 
-// Remove aresta
+// Remove uma aresta específica do grafo
 void GrafoLista::deleta_aresta(int origem, int destino) {
     if (origem < 0 || origem >= num_vertices || destino < 0 || destino >= num_vertices)
         throw std::out_of_range("Vértices fora do intervalo!");
@@ -288,7 +286,7 @@ void GrafoLista::deleta_aresta(int origem, int destino) {
     }
 }
 
-// Menor distância entre dois nós (Dijkstra)
+// Calcula a menor distância entre dois nós usando o algoritmo de Dijkstra
 double GrafoLista::menor_distancia(int origem, int destino) const {
     if (origem < 0 || origem >= num_vertices || destino < 0 || destino >= num_vertices)
         throw std::out_of_range("Vértices fora do intervalo!");
@@ -314,7 +312,7 @@ double GrafoLista::menor_distancia(int origem, int destino) const {
     return dist[destino];
 }
 
-// --- Algoritmo Randomizado ---
+// Algoritmo Randomizado Controlado para encontrar um caminho
 std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
     std::vector<int> melhor_caminho;
     double menor_custo = std::numeric_limits<double>::max();
@@ -369,6 +367,7 @@ std::vector<int> GrafoLista::tsp_randomizado_controlado(int iteracoes, int N) {
     return melhor_caminho;
 }
 
+// Algoritmo Reativo para o problema do caixeiro viajante (TSP)
 std::vector<int> GrafoLista::tsp_reativo(int max_iteracoes) {
     int N = 3;
     const double taxa_limite_inferior = 0.05;
@@ -417,6 +416,7 @@ std::vector<int> GrafoLista::tsp_reativo(int max_iteracoes) {
     return melhor_caminho;
 }
 
+// Algoritmo Guloso de Densidade para o problema do caixeiro viajante (TSP)
 std::vector<int> GrafoLista::tsp_guloso_densidade() {
     std::vector<int> caminho;
     std::vector<bool> visitado(num_vertices, false);
@@ -439,6 +439,7 @@ std::vector<int> GrafoLista::tsp_guloso_densidade() {
                         conexoes_nao_visitadas++;
                     }
                 }
+                 
                 // Passo 3: Calcular densidade (distância / (conexões + 1))
                 double densidade = aresta.second / (conexoes_nao_visitadas + 1.0);
                 if (densidade < menor_densidade) {
@@ -454,15 +455,22 @@ std::vector<int> GrafoLista::tsp_guloso_densidade() {
         atual = proxima;
     }
 
-    // Verificar se o caminho é válido (apenas para depuração, se necessário)
-    // if (caminho.size() != static_cast<size_t>(num_vertices)) {
-    //     // O algoritmo não encontrou um caminho completo, mas o grafo pode ser conexo
-    // }
+    
 
     return caminho;
 }
 
 
+/**
+ * @brief Calcula o custo de um caminho no grafo.
+ * 
+ * @param caminho O caminho cujo custo será calculado.
+ * @return O custo total do caminho.
+ * 
+ * @details O custo é calculado somando as distâncias entre os vértices
+ * sucessivos do caminho. O custo da aresta que fecha o caminho (ou seja, a
+ * aresta que liga o último vértice ao primeiro) também é incluído no cálculo.
+ */
 double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
     double custo = 0;
     for (size_t i = 0; i < caminho.size() - 1; i++) {
@@ -480,4 +488,8 @@ double GrafoLista::calcular_custo(const std::vector<int>& caminho) {
         }
     }
     return custo;
-}
+} 
+
+
+
+

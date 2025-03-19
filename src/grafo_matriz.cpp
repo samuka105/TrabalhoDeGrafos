@@ -9,7 +9,6 @@
 #include <algorithm> // Para std::min e std::max
 #include <stack>
 
-// grafo_matriz.cpp
 
 // Construtor padrão (sem parâmetros)
 GrafoMatriz::GrafoMatriz() 
@@ -352,6 +351,19 @@ double GrafoMatriz::menor_distancia(int origem, int destino) const {
     return dist[destino];
 }
 
+/**
+ * @brief Algoritmo de TSP randomizado controlado.
+ *
+ * Cada iteração, escolhe um caminho aleatório (mas não necessariamente
+ * ótimo) e verifica se o custo dele é menor do que o menor custo
+ * encontrado até o momento.
+ *
+ * @param iteracoes Número de iterações do algoritmo.
+ * @param N Número de opções a serem consideradas em cada escolha.
+ *
+ * @return Um caminho que visita todos os vértices do grafo e retorna
+ *         ao vértice de partida.
+ */
 std::vector<int> GrafoMatriz::tsp_randomizado_controlado(int iteracoes, int N) {
     std::vector<int> melhor_caminho;
     double menor_custo = std::numeric_limits<double>::max();
@@ -440,6 +452,7 @@ std::vector<int> GrafoMatriz::tsp_guloso_densidade() {
     return caminho;
 }
 
+
 std::vector<int> GrafoMatriz::tsp_reativo(int max_iteracoes) {
     int N = 3;
     double taxa_limite_inferior = 0.05;
@@ -477,6 +490,12 @@ std::vector<int> GrafoMatriz::tsp_reativo(int max_iteracoes) {
 
     return melhor_caminho;
 }
+/**
+ * @brief Calcula o custo total de um caminho no grafo.
+ *
+ * @param caminho Vetor de inteiros que representa o caminho no grafo.
+ * @return O custo total do caminho.
+ */
 
 double GrafoMatriz::calcular_custo(const std::vector<int>& caminho) {
     double custo = 0;
